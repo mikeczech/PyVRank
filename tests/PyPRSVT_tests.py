@@ -1,4 +1,3 @@
-from nose.tools import *
 import PyPRSVT
 
 def setup():
@@ -6,6 +5,3 @@ def setup():
 
 def teardown():
     pass
-
-def test_basic():
-    assert False
