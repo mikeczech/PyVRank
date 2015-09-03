@@ -4,7 +4,8 @@ from enum import Enum, unique
 import re
 import os.path
 
-Result = namedtuple('Result', 'sourcefile status cputime walltime mem_usage expected_status property_type')
+Result = namedtuple('Result', 'sourcefile status status_msg cputime walltime mem_usage expected_status property_type')
+
 
 @unique
 class PropertyType(Enum):
@@ -13,11 +14,13 @@ class PropertyType(Enum):
     termination = 3
     undefined = 4
 
+
 @unique
 class Status(Enum):
     true = 1
     false = 2
     unknown = 3
+
 
 def read_results_dir(results_xml_raw_dir_path):
     """
@@ -44,6 +47,7 @@ def read_results(results_xml_raw_path):
         r = columns_to_dict(source_file.column)
         vtask_path = source_file.attrib['name']
         yield Result(vtask_path,
+                     match_status_str(r['status']),
                      r['status'],
                      r['cputime'],
                      r['walltime'],
@@ -78,8 +82,22 @@ def extract_expected_status(vtask_path):
     match = re.match(r'[-a-zA-Z0-9_]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
-        return match.group(1)
+        return match_status_str(match.group(1))
     return None
+
+
+def match_status_str(status_str):
+    """
+    Maps status strings to their associated meaning
+    :param status_str: the status string
+    :return: true, false, or unknown
+    """
+    if status_str == 'true':
+        return Status.true
+    if status_str == 'false':
+        return Status.false
+    else:
+        return Status.unknown
 
 
 def extract_property_type(vtask_path):
