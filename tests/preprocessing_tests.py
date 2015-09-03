@@ -2,7 +2,7 @@ from PyPRSVT.preprocessing import svcomp
 import nose.tools as nt
 
 def read_results_test():
-    results = list(svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.Arrays.xml'))
+    results = list(svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml'))
 
     nt.assert_equal(results[0][0], 'CBMC')
     nt.assert_equal(results[0][1].options, '--32')
