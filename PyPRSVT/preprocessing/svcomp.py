@@ -41,7 +41,6 @@ def read_results(results_xml_raw_path):
     """
     with open(results_xml_raw_path) as f:
         xml = f.read()
-
     root = objectify.fromstring(xml)
     for source_file in root.sourcefile:
         r = columns_to_dict(source_file.column)
