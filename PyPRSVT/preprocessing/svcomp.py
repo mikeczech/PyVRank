@@ -102,7 +102,7 @@ def match_status_str(status_str):
 
 def extract_property_type(vtask_path):
     """
-    Extracts the property type associated from a verification task.
+    Extracts the property type associated with a verification task.
     :param vtask_path: path to verification task
     :return: the property type
     """
