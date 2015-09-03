@@ -4,7 +4,7 @@ from enum import Enum, unique
 import re
 import os.path
 
-Result = namedtuple('Result', 'sourcefile status status_msg cputime walltime mem_usage expected_status property_type')
+SourceFile = namedtuple('SourceFile', 'file options status status_msg cputime walltime mem_usage expected_status property_type')
 
 
 @unique
@@ -45,14 +45,15 @@ def read_results(results_xml_raw_path):
     for source_file in root.sourcefile:
         r = columns_to_dict(source_file.column)
         vtask_path = source_file.attrib['name']
-        yield Result(vtask_path,
-                     match_status_str(r['status']),
-                     r['status'],
-                     float(r['cputime'][:-1]),
-                     float(r['walltime'][:-1]),
-                     int(r['memUsage'][:-1]),
-                     extract_expected_status(vtask_path),
-                     extract_property_type(vtask_path))
+        yield root.attrib['tool'], SourceFile(vtask_path,
+                                              source_file.attrib['options'],
+                                              match_status_str(r['status']),
+                                              r['status'],
+                                              float(r['cputime'][:-1]),
+                                              float(r['walltime'][:-1]),
+                                              int(r['memUsage'][:-1]),
+                                              extract_expected_status(vtask_path),
+                                              extract_property_type(vtask_path))
 
 
 def columns_to_dict(columns):
