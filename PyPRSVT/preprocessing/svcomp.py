@@ -63,7 +63,7 @@ def extract_attributes(vtask_path):
 
              Otherwise the result is None.
     """
-    x = 2
+    x = 3
     match = re.match(r'[-a-zA-Z0-9_]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      ntpath.basename(vtask_path))
     if match is not None:
