@@ -1,9 +1,23 @@
 from lxml import objectify
 from collections import namedtuple
+from enum import Enum, unique
 import re
-import ntpath
+import os.path
 
-Result = namedtuple('Result', 'sourcefile status cputime walltime mem_usage expected_result property_type')
+Result = namedtuple('Result', 'sourcefile status cputime walltime mem_usage expected_status property_type')
+
+@unique
+class PropertyType(Enum):
+    unreachability = 1
+    memory_safety = 2
+    termination = 3
+    undefined = 4
+
+@unique
+class Status(Enum):
+    true = 1
+    false = 2
+    unknown = 3
 
 def read_results_dir(results_xml_raw_dir_path):
     """
@@ -28,15 +42,14 @@ def read_results(results_xml_raw_path):
     root = objectify.fromstring(xml)
     for source_file in root.sourcefile:
         r = columns_to_dict(source_file.column)
-        name = source_file.attrib['name']
-        expected_result, property_type = extract_attributes(name)
-        yield Result(name,
+        vtask_path = source_file.attrib['name']
+        yield Result(vtask_path,
                      r['status'],
                      r['cputime'],
                      r['walltime'],
                      r['memUsage'],
-                     expected_result,
-                     property_type)
+                     extract_expected_status(vtask_path),
+                     extract_property_type(vtask_path))
 
 
 def columns_to_dict(columns):
@@ -51,10 +64,9 @@ def columns_to_dict(columns):
     return ret
 
 
-def extract_attributes(vtask_path):
+def extract_expected_status(vtask_path):
     """
-    Extracts the expected result and property type from a verification task's
-    filename.
+    Extracts the expected status from a verification task.
 
     :param vtask_path: Path to a SVCOMP verification task.
     :return: A tuple containing a verification task's expected result and
@@ -64,8 +76,35 @@ def extract_attributes(vtask_path):
              Otherwise the result is None.
     """
     match = re.match(r'[-a-zA-Z0-9_]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
-                     ntpath.basename(vtask_path))
+                     os.path.basename(vtask_path))
     if match is not None:
-        return match.group(1), match.group(2)
+        return match.group(1)
     return None
 
+
+def extract_property_type(vtask_path):
+    """
+    Extracts the property type associated from a verification task.
+    :param vtask_path: path to verification task
+    :return: the property type
+    """
+    unreachability_pattern = re.compile(r'CHECK\([_\s\w\(\)]+,\s*LTL\(\s*G\s*!\s*call\([_\w\s\(\)]+\)\)')
+    memory_safety_pattern = re.compile(r'CHECK\([_\s\w\(\)]+,\s*LTL\(\s*G\s*valid-\w+\)\)')
+    termination_pattern = re.compile(r'CHECK\([_\s\w\(\)]+,\s*LTL\(\s*F\s*end\)\)')
+
+    root, ext = os.path.splitext(vtask_path)
+    prp = root + '.prp'
+    if not os.path.isfile(prp):
+        prp = os.path.join(os.path.dirname(vtask_path), 'ALL.prp')
+    if not os.path.isfile(prp):
+        return PropertyType.undefined
+
+    with open(prp) as f:
+        prp_file_content = f.read()
+    if unreachability_pattern.search(prp_file_content) is not None:
+        return PropertyType.unreachability
+    if memory_safety_pattern.search(prp_file_content) is not None:
+        return PropertyType.memory_safety
+    if termination_pattern.search(prp_file_content) is not None:
+        return PropertyType.termination
+    return PropertyType.undefined
