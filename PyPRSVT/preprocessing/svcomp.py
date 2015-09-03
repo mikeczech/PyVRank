@@ -51,7 +51,7 @@ def read_results(results_xml_raw_path):
                                               r['status'],
                                               float(r['cputime'][:-1]),
                                               float(r['walltime'][:-1]),
-                                              int(r['memUsage'][:-1]),
+                                              int(r['memUsage']),
                                               extract_expected_status(vtask_path),
                                               extract_property_type(vtask_path))
 
