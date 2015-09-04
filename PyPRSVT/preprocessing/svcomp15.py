@@ -1,22 +1,10 @@
 from lxml import objectify
-from enum import Enum, unique
 import re
 import os
 import pandas as pd
 
-
-@unique
-class PropertyType(Enum):
-    unreachability = 1
-    memory_safety = 2
-    termination = 3
-
-
-@unique
-class Status(Enum):
-    true = 1
-    false = 2
-    unknown = 3
+import PyPRSVT.preprocessing.utils as utils
+import PyPRSVT.basics as b
 
 
 class MissingPropertyTypeException(Exception):
@@ -57,7 +45,7 @@ def read_results(results_xml_raw_path):
         vtask_path = source_file.attrib['name']
         r = columns_to_dict(source_file.column)
         df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
-                              match_status_str(r['status']),
+                              utils.match_status_str(r['status']),
                               r['status'],
                               float(r['cputime'][:-1]),
                               float(r['walltime'][:-1]),
@@ -94,22 +82,8 @@ def extract_expected_status(vtask_path):
     match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
-        return match_status_str(match.group(1))
+        return utils.match_status_str(match.group(1))
     raise MissingExpectedStatusException('Cannot extract expected status from filename / regex failed (wrong naming?)')
-
-
-def match_status_str(status_str):
-    """
-    Maps status strings to their associated meaning
-    :param status_str: the status string
-    :return: true, false, or unknown
-    """
-    if status_str == 'true':
-        return Status.true
-    if status_str == 'false':
-        return Status.false
-    else:
-        return Status.unknown
 
 
 def extract_property_type(vtask_path):
@@ -132,9 +106,9 @@ def extract_property_type(vtask_path):
     with open(prp) as f:
         prp_file_content = f.read()
     if unreachability_pattern.search(prp_file_content) is not None:
-        return PropertyType.unreachability
+        return b.PropertyType.unreachability
     if memory_safety_pattern.search(prp_file_content) is not None:
-        return PropertyType.memory_safety
+        return b.PropertyType.memory_safety
     if termination_pattern.search(prp_file_content) is not None:
-        return PropertyType.termination
+        return b.PropertyType.termination
     raise MissingPropertyTypeException('Cannot determine property type from prp file')
