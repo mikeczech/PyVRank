@@ -1,10 +1,8 @@
 from lxml import objectify
-from collections import namedtuple
 from enum import Enum, unique
 import re
 import os.path
-
-SourceFile = namedtuple('SourceFile', 'file options status status_msg cputime walltime mem_usage expected_status property_type')
+import pandas as pd
 
 
 @unique
@@ -42,18 +40,20 @@ def read_results(results_xml_raw_path):
     with open(results_xml_raw_path) as f:
         xml = f.read()
     root = objectify.fromstring(xml)
+    df = pd.DataFrame(columns=['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage',
+                               'expected_status', 'property_type'])
     for source_file in root.sourcefile:
-        r = columns_to_dict(source_file.column)
         vtask_path = source_file.attrib['name']
-        yield root.attrib['tool'], SourceFile(vtask_path,
-                                              source_file.attrib['options'],
-                                              match_status_str(r['status']),
-                                              r['status'],
-                                              float(r['cputime'][:-1]),
-                                              float(r['walltime'][:-1]),
-                                              int(r['memUsage']),
-                                              extract_expected_status(vtask_path),
-                                              extract_property_type(vtask_path))
+        r = columns_to_dict(source_file.column)
+        df.loc[vtask_path] = [source_file.attrib['options'],
+                              match_status_str(r['status']),
+                              r['status'],
+                              float(r['cputime'][:-1]),
+                              float(r['walltime'][:-1]),
+                              int(r['memUsage']),
+                              extract_expected_status(vtask_path),
+                              extract_property_type(vtask_path)]
+    return root.attrib['tool'], df
 
 
 def columns_to_dict(columns):
