@@ -19,6 +19,13 @@ class Status(Enum):
     unknown = 3
 
 
+class MissingPropertyTypeException(Exception):
+    pass
+
+class MissingExpectedStatusException(Exception):
+    pass
+
+
 def read_category(results_xml_raw_dir_path, category):
     """
     Reads a directory of raw xml SVCOMP results into a data frame.
@@ -69,6 +76,7 @@ def columns_to_dict(columns):
     ret = {}
     for column in columns:
         ret[column.attrib['title']] = column.attrib['value']
+    assert ret, 'Could not read columns from sourcefile'
     return ret
 
 
@@ -87,7 +95,7 @@ def extract_expected_status(vtask_path):
                      os.path.basename(vtask_path))
     if match is not None:
         return match_status_str(match.group(1))
-    return None
+    raise MissingExpectedStatusException('Cannot extract expected status from filename / regex failed (wrong naming?)')
 
 
 def match_status_str(status_str):
@@ -119,7 +127,7 @@ def extract_property_type(vtask_path):
     if not os.path.isfile(prp):
         prp = os.path.join(os.path.dirname(vtask_path), 'ALL.prp')
     if not os.path.isfile(prp):
-        return None
+        raise MissingPropertyTypeException('Missing ALL.prp or {filename}.prp')
 
     with open(prp) as f:
         prp_file_content = f.read()
@@ -129,4 +137,4 @@ def extract_property_type(vtask_path):
         return PropertyType.memory_safety
     if termination_pattern.search(prp_file_content) is not None:
         return PropertyType.termination
-    return None
+    raise MissingPropertyTypeException('Cannot determine property type from prp file')
