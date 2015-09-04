@@ -2,10 +2,9 @@ from PyPRSVT.preprocessing import svcomp
 import nose.tools as nt
 
 def read_results_test():
-    benchmark, df = svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
+    tool, df = svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
 
-    nt.assert_equal(benchmark.tool, 'CBMC')
-    nt.assert_equal(benchmark.category, 'sv-comp15.mixed')
+    nt.assert_equal(tool, 'CBMC')
 
     nt.assert_equal(df.iloc[0]['options'], '--32')
     nt.assert_equal(df.iloc[0]['status'], svcomp.Status.true)
@@ -25,6 +24,6 @@ def read_results_test():
     nt.assert_equal(df.iloc[3]['options'], '--64')
 
 
-
-# def read_results_dir_test():
-#     assert False
+def read_category_test():
+    r = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
+    print(r)

@@ -2,10 +2,9 @@ from lxml import objectify
 from enum import Enum, unique
 from collections import namedtuple
 import re
-import os.path
+import os
 import pandas as pd
 
-Benchmark = namedtuple('Benchmark', 'tool category')
 
 @unique
 class PropertyType(Enum):
@@ -22,14 +21,19 @@ class Status(Enum):
     unknown = 3
 
 
-def read_results_dir(results_xml_raw_dir_path):
+def read_category(results_xml_raw_dir_path, category):
     """
     Reads a directory of raw xml SVCOMP results into a data frame.
 
     :param results_xml_raw_dir_path: Path to the raw xml results from SVCOMP
     :return: Pandas data frame
     """
-    pass
+    pattern = re.compile(r'\w+\.[0-9-_]+\.results\.sv-comp15\.{0}\.xml'.format(category))
+    category_results = []
+    for file in os.listdir(results_xml_raw_dir_path):
+        if re.match(pattern, file) is not None:
+            category_results.append(read_results(os.path.join(results_xml_raw_dir_path, file)))
+    return pd.concat(dict(category_results), axis=1)
 
 
 def read_results(results_xml_raw_path):
@@ -55,7 +59,7 @@ def read_results(results_xml_raw_path):
                               int(r['memUsage']),
                               extract_expected_status(vtask_path),
                               extract_property_type(vtask_path)]
-    return Benchmark(root.attrib['tool'], root.attrib['name']), df
+    return root.attrib['tool'], df
 
 
 def columns_to_dict(columns):
