@@ -32,5 +32,5 @@ def read_results_no_none_test():
 
 
 def read_category_test():
-    r = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    print(r.to_string())
+    df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
+    nt.assert_equal(df.shape, (4, 16))
