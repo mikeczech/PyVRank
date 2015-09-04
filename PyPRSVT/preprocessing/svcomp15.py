@@ -21,22 +21,24 @@ def read_category(results_xml_raw_dir_path, category):
     :param results_xml_raw_dir_path: Path to the raw xml results from SVCOMP
     :return: Pandas data frame
     """
-    pattern = re.compile(r'\w+\.[0-9-_]+\.results\.sv-comp15\.{0}\.xml'.format(category))
+    pattern = re.compile(r'\w+\.[0-9-_]+\.(witnesscheck\.[0-9-_]+\.)?results\.sv-comp15\.{0}\.xml'.format(category))
     category_results = []
     for file in os.listdir(results_xml_raw_dir_path):
-        if re.match(pattern, file) is not None:
-            category_results.append(read_results(os.path.join(results_xml_raw_dir_path, file)))
+        match = pattern.match(file)
+        if match is not None:
+            category_results.append(svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file),
+                                                            bool(match.group(1))))
     return pd.concat(dict(category_results), axis=1)
 
 
-def read_results(results_xml_raw_path):
+def svcomp_xml_to_dataframe(xml_path, is_witnesscheck):
     """
     Reads raw xml SVCOMP results into a data frame.
 
-    :param results_xml_raw_path:
+    :param xml_path:
     :return:
     """
-    with open(results_xml_raw_path) as f:
+    with open(xml_path) as f:
         xml = f.read()
     root = objectify.fromstring(xml)
     df = pd.DataFrame(columns=['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage',
@@ -52,7 +54,11 @@ def read_results(results_xml_raw_path):
                               int(r['memUsage']),
                               extract_expected_status(vtask_path),
                               extract_property_type(vtask_path)]
-    return root.attrib['tool'], df
+    if is_witnesscheck:
+        tool_name = root.attrib['tool'] + '(WTNESSCHECK)'
+    else:
+        tool_name = root.attrib['tool']
+    return tool_name, df
 
 
 def columns_to_dict(columns):
