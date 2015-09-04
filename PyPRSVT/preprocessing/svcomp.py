@@ -1,6 +1,5 @@
 from lxml import objectify
 from enum import Enum, unique
-from collections import namedtuple
 import re
 import os
 import pandas as pd
@@ -11,7 +10,6 @@ class PropertyType(Enum):
     unreachability = 1
     memory_safety = 2
     termination = 3
-    undefined = 4
 
 
 @unique
@@ -85,7 +83,7 @@ def extract_expected_status(vtask_path):
 
              Otherwise the result is None.
     """
-    match = re.match(r'[-a-zA-Z0-9_]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
+    match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
         return match_status_str(match.group(1))
@@ -121,7 +119,7 @@ def extract_property_type(vtask_path):
     if not os.path.isfile(prp):
         prp = os.path.join(os.path.dirname(vtask_path), 'ALL.prp')
     if not os.path.isfile(prp):
-        return PropertyType.undefined
+        return None
 
     with open(prp) as f:
         prp_file_content = f.read()
@@ -131,4 +129,4 @@ def extract_property_type(vtask_path):
         return PropertyType.memory_safety
     if termination_pattern.search(prp_file_content) is not None:
         return PropertyType.termination
-    return PropertyType.undefined
+    return None

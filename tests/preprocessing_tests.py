@@ -1,7 +1,7 @@
 from PyPRSVT.preprocessing import svcomp
 import nose.tools as nt
 
-def read_results_test():
+def read_results_values_test():
     tool, df = svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
 
     nt.assert_equal(tool, 'CBMC')
@@ -24,6 +24,13 @@ def read_results_test():
     nt.assert_equal(df.iloc[3]['options'], '--64')
 
 
+def read_results_no_none_test():
+    _, df = svcomp.read_results('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
+    for __, series in df.iterrows():
+        for ___, value in series.iteritems():
+            nt.assert_not_equal(value, None)
+
+
 def read_category_test():
     r = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    print(r)
+    print(r.to_string())
