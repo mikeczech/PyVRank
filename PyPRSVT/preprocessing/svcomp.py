@@ -51,7 +51,7 @@ def read_results(results_xml_raw_path):
     for source_file in root.sourcefile:
         vtask_path = source_file.attrib['name']
         r = columns_to_dict(source_file.column)
-        df.loc[vtask_path] = [source_file.attrib['options'],
+        df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
                               match_status_str(r['status']),
                               r['status'],
                               float(r['cputime'][:-1]),
