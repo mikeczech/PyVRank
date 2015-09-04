@@ -1,9 +1,11 @@
 from lxml import objectify
 from enum import Enum, unique
+from collections import namedtuple
 import re
 import os.path
 import pandas as pd
 
+Benchmark = namedtuple('Benchmark', 'tool category')
 
 @unique
 class PropertyType(Enum):
@@ -53,7 +55,7 @@ def read_results(results_xml_raw_path):
                               int(r['memUsage']),
                               extract_expected_status(vtask_path),
                               extract_property_type(vtask_path)]
-    return root.attrib['tool'], df
+    return Benchmark(root.attrib['tool'], root.attrib['name']), df
 
 
 def columns_to_dict(columns):
