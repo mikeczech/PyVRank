@@ -26,12 +26,11 @@ def read_category(results_xml_raw_dir_path, category):
     for file in os.listdir(results_xml_raw_dir_path):
         match = pattern.match(file)
         if match is not None:
-            category_results.append(svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file),
-                                                            bool(match.group(1))))
+            category_results.append(svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file)))
     return pd.concat(dict(category_results), axis=1)
 
 
-def svcomp_xml_to_dataframe(xml_path, is_witnesscheck):
+def svcomp_xml_to_dataframe(xml_path):
     """
     Reads raw xml SVCOMP results into a data frame.
 
@@ -43,22 +42,19 @@ def svcomp_xml_to_dataframe(xml_path, is_witnesscheck):
     root = objectify.fromstring(xml)
     df = pd.DataFrame(columns=['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage',
                                'expected_status', 'property_type'])
-    for source_file in root.sourcefile:
-        vtask_path = source_file.attrib['name']
-        r = columns_to_dict(source_file.column)
-        df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
-                              utils.match_status_str(r['status']),
-                              r['status'],
-                              float(r['cputime'][:-1]),
-                              float(r['walltime'][:-1]),
-                              int(r['memUsage']),
-                              extract_expected_status(vtask_path),
-                              extract_property_type(vtask_path)]
-    if is_witnesscheck:
-        tool_name = root.attrib['tool'] + '(WTNESSCHECK)'
-    else:
-        tool_name = root.attrib['tool']
-    return tool_name, df
+    if hasattr(root, 'sourcefile'):
+        for source_file in root.sourcefile:
+            vtask_path = source_file.attrib['name']
+            r = columns_to_dict(source_file.column)
+            df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
+                                  utils.match_status_str(r['status']),
+                                  r['status'],
+                                  float(r['cputime'][:-1]),
+                                  float(r['walltime'][:-1]),
+                                  int(r['memUsage']),
+                                  extract_expected_status(vtask_path),
+                                  extract_property_type(vtask_path)]
+    return root.attrib['benchmarkname'], df
 
 
 def columns_to_dict(columns):

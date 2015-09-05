@@ -3,9 +3,9 @@ import PyPRSVT.basics as b
 import nose.tools as nt
 
 def read_results_values_test():
-    tool, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml', False)
+    tool, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
 
-    nt.assert_equal(tool, 'CBMC')
+    nt.assert_equal(tool, 'cbmc')
 
     nt.assert_equal(df.iloc[0]['options'], '--32')
     nt.assert_equal(df.iloc[0]['status'], b.Status.true)
@@ -26,7 +26,7 @@ def read_results_values_test():
 
 
 def read_results_no_none_test():
-    _, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml', False)
+    _, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
     for __, series in df.iterrows():
         for ___, value in series.iteritems():
             nt.assert_not_equal(value, None)

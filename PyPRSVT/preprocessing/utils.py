@@ -1,4 +1,5 @@
 import PyPRSVT.basics as b
+import re
 
 def match_status_str(status_str):
     """
@@ -6,9 +7,9 @@ def match_status_str(status_str):
     :param status_str: the status string
     :return: true, false, or unknown
     """
-    if status_str == 'true':
+    if re.search(r'true', status_str):
         return b.Status.true
-    if status_str == 'false':
+    if re.search(r'false', status_str):
         return b.Status.false
     else:
         return b.Status.unknown
