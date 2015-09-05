@@ -1,3 +1,7 @@
+"""
+Python module for reading SV-COMP 2015 results into memory.
+"""
+
 from lxml import objectify
 import re
 import os

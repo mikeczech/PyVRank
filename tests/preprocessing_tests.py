@@ -1,9 +1,9 @@
-from PyPRSVT.preprocessing import svcomp15
+from PyPRSVT.preprocessing import svcomp
 import PyPRSVT.basics as b
 import nose.tools as nt
 
 def read_results_values_test():
-    tool, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
+    tool, df = svcomp.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
 
     nt.assert_equal(tool, 'cbmc')
 
@@ -26,12 +26,12 @@ def read_results_values_test():
 
 
 def read_results_no_none_test():
-    _, df = svcomp15.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
+    _, df = svcomp.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
     for __, series in df.iterrows():
         for ___, value in series.iteritems():
             nt.assert_not_equal(value, None)
 
 
 def read_category_test():
-    df = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
+    df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
     print(df.to_string())
