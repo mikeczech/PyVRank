@@ -143,3 +143,23 @@ def _extract_property_type(vtask_path):
     if termination_pattern.search(prp_file_content) is not None:
         return PropertyType.termination
     raise MissingPropertyTypeException('Cannot determine property type from prp file')
+
+
+def score(status, expected_status):
+    """
+    Evaluation of the result of a verification tool
+    :param status: observed status for the analyzed program
+    :param expected_status: expected status for the analyzed program
+    :return:
+    """
+    if status is Status.unknown:
+        return 0
+    if status is Status.false and expected_status is Status.false:
+        return 1
+    if status is Status.false and expected_status is Status.true:
+        return -6
+    if status is Status.true and expected_status is Status.true:
+        return 2
+    if status is Status.true and expected_status is Status.false:
+        return -12
+    assert False, 'No score for combination {0} and {1}'.format(status, expected_status)

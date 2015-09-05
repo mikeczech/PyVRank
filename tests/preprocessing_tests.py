@@ -1,5 +1,7 @@
-from PyPRSVT.preprocessing import svcomp
 import nose.tools as nt
+
+from PyPRSVT.preprocessing.competition import svcomp
+
 
 def read_results_values_test():
     tool, df = svcomp.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
