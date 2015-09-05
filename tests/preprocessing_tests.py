@@ -1,6 +1,7 @@
 import nose.tools as nt
 
 from PyPRSVT.preprocessing.competition import svcomp
+from PyPRSVT.preprocessing import ranking
 
 
 def read_results_values_test():
@@ -47,3 +48,8 @@ def read_results_no_none_test():
 def read_category_test():
     df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
     print(df.to_string())
+
+
+def ranking_test():
+    df = svcomp.read_category(('static/results-xml-raw', 'mixed-examples'))
+    ranking_df = ranking.create_tool_ranking_df(df, )

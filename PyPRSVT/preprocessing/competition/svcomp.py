@@ -163,3 +163,15 @@ def score(status, expected_status):
     if status is Status.true and expected_status is Status.false:
         return -12
     assert False, 'No score for combination {0} and {1}'.format(status, expected_status)
+
+
+def rank(result_a, result_b):
+    score_a = score(result_a['status'], result_a['expected_status'])
+    score_b = score(result_b['status'], result_b['expected_status'])
+    if score_a > score_b:
+        return 1
+    if score_b > score_a:
+        return 2
+    if result_a['cputime'] > result_b['cputime']:
+        return 2
+    return 1
