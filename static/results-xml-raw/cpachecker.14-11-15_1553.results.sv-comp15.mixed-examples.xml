@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<result benchmarkname="cpachecker" block="Arrays" cpuCores="8" date="14-11-15 15:53" memlimit="15000 MB" name="sv-comp15.mixed" options="-sv-comp15 -disable-java-assertions -heap 10000m" propertyfiles="${sourcefile_path}/ALL.prp" timelimit="900 s" tool="CPAchecker" version="1.3.10-svcomp15">
+  <columns>
+    <column title="status"/>
+    <column title="cputime"/>
+    <column title="walltime"/>
+  </columns>
+  <systeminfo hostname="cayman1">
+    <os name="Linux 3.13.0-39-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i]" name="static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i">
+    <column title="status" value="unknown"/>
+    <column title="cputime" value="122.836767281s"/>
+    <column title="walltime" value="104.021896124s"/>
+    <column hidden="true" title="category" value="unknown"/>
+    <column hidden="true" title="vcloud-returnvalue" value="0"/>
+    <column title="host" value="cayman3"/>
+    <column title="memUsage" value="4137443328"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="104.187217551s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': 27967955, u'cpu': -57966203, u'uncore': -58392, u'external': 5400000}"/>
+    <column hidden="true" title="exitcode" value="0"/>
+  </sourcefile>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i]" name="static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i">
+    <column title="status" value="unknown"/>
+    <column title="cputime" value="122.521175299s"/>
+    <column title="walltime" value="116.680887938s"/>
+    <column hidden="true" title="category" value="unknown"/>
+    <column hidden="true" title="vcloud-returnvalue" value="0"/>
+    <column title="host" value="cayman6"/>
+    <column title="memUsage" value="708550656"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="116.844816556s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': -25603773, u'cpu': 51168057, u'uncore': 54461, u'external': 3600000}"/>
+    <column hidden="true" title="exitcode" value="0"/>
+  </sourcefile>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i]" name="static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i" options="--32">
+    <column title="status" value="true"/>
+    <column title="cputime" value="849.917340766s"/>
+    <column title="walltime" value="850.019608021s"/>
+    <column hidden="true" title="category" value="correct"/>
+    <column hidden="true" title="vcloud-returnvalue" value="0"/>
+    <column title="host" value="cayman6"/>
+    <column title="memUsage" value="2314461184"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="850.711223794s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': 76253211, u'cpu': -166889753, u'uncore': -20235, u'external': 36000000}"/>
+    <column hidden="true" title="exitcode" value="0"/>
+  </sourcefile>
+</result>

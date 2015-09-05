@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<result benchmarkname="cbmc" block="Arrays" cpuCores="8" date="14-12-04 12:41" memlimit="15000 MB" name="sv-comp15.mixed" options="" propertyfiles="${sourcefile_path}/ALL.prp" timelimit="900 s" tool="CBMC" version="4.9">
+  <columns>
+    <column title="status"/>
+    <column title="cputime"/>
+    <column title="walltime"/>
+  </columns>
+  <systeminfo hostname="cayman1">
+    <os name="Linux 3.13.0-40-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i]" name="static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i" options="--32">
+    <column title="status" value="true"/>
+    <column title="cputime" value="7.627101835s"/>
+    <column title="walltime" value="7.66226601601s"/>
+    <column hidden="true" title="category" value="wrong"/>
+    <column hidden="true" title="vcloud-returnvalue" value="0"/>
+    <column title="host" value="cayman1"/>
+    <column title="memUsage" value="2848837632"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="8.216908942s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': 150566391, u'cpu': -239532938, u'uncore': -21897, u'external': 0}"/>
+    <column hidden="true" title="exitcode" value="0"/>
+  </sourcefile>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i]" name="static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i" options="--32">
+    <column title="status" value="OUT OF MEMORY"/>
+    <column title="cputime" value="14.584260451s"/>
+    <column title="walltime" value="14.5260441303s"/>
+    <column hidden="true" title="category" value="error"/>
+    <column title="host" value="cayman1"/>
+    <column title="memUsage" value="15000002560"/>
+    <column hidden="true" title="vcloud-exitsignal" value="9"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="15.207918333s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': 220541011, u'cpu': -257131668, u'uncore': -18733, u'external': 0}"/>
+    <column hidden="true" title="exitcode" value="9"/>
+  </sourcefile>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i]" name="static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i" options="--32">
+    <column title="status" value="true"/>
+    <column title="cputime" value="849.917340766s"/>
+    <column title="walltime" value="850.019608021s"/>
+    <column hidden="true" title="category" value="correct"/>
+    <column hidden="true" title="vcloud-returnvalue" value="0"/>
+    <column title="host" value="cayman6"/>
+    <column title="memUsage" value="2314461184"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="850.711223794s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': 76253211, u'cpu': -166889753, u'uncore': -20235, u'external': 36000000}"/>
+    <column hidden="true" title="exitcode" value="0"/>
+  </sourcefile>
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/NonTermination1_false-termination.c]" name="static/sv-benchmarks/c/mixed-examples/NonTermination1_false-termination.c" options="--64">
+    <column title="status" value="unknown"/>
+    <column title="cputime" value="0.012291s"/>
+    <column title="walltime" value="0.0112471580505s"/>
+    <column hidden="true" title="category" value="unknown"/>
+    <column hidden="true" title="vcloud-returnvalue" value="6"/>
+    <column title="host" value="cayman2"/>
+    <column title="memUsage" value="1622016"/>
+    <column hidden="true" title="vcloud-outerwalltime" value="0.192067663s"/>
+    <column hidden="true" title="vcloud-energy" value="{u'core': -35003035, u'cpu': 17039845, u'uncore': 20160, u'external': 0}"/>
+    <column hidden="true" title="exitcode" value="1536"/>
+  </sourcefile>
+</result>

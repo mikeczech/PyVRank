@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<result benchmarkname="cpachecker.14-11-15_1553.witnesscheck" block="Arrays" cpuCores="8" date="14-12-21 23:23" memlimit="15000 MB" name="sv-comp15.Arrays" options="-witness-check -noout -timelimit 90 -spec ../../results-2015/cpachecker.14-11-15_1553.logfiles/sv-comp15.${sourcefile_name}.files/SV-Competition/comp/bin-2015/CPAchecker-1.3.10-svcomp15-unix/output/witness.graphml -setprop spec.singlePathMatching=false -setprop parser.transformTokensToLines=true" propertyfiles="${sourcefile_path}/ALL.prp" timelimit="90 s" tool="CPAchecker" version="r15097 + tokenizer">
+  <columns>
+    <column title="status"/>
+    <column title="cputime"/>
+    <column title="walltime"/>
+  </columns>
+  <systeminfo hostname="cayman1">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman2">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman3">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman4">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman5">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman6">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman7">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+  <systeminfo hostname="cayman8">
+    <os name="Linux 3.13.0-43-generic"/>
+    <cpu cores="8" frequency="3.4 GHz" model="Intel Core i7-4770 @ 3.40 GHz"/>
+    <ram size="33 GB"/>
+  </systeminfo>
+</result>
