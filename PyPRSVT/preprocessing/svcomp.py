@@ -60,19 +60,19 @@ def svcomp_xml_to_dataframe(xml_path):
     if hasattr(root, 'sourcefile'):
         for source_file in root.sourcefile:
             vtask_path = source_file.attrib['name']
-            r = columns_to_dict(source_file.column)
+            r = _columns_to_dict(source_file.column)
             df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
-                                  match_status_str(r['status']),
+                                  _match_status_str(r['status']),
                                   r['status'],
                                   float(r['cputime'][:-1]),
                                   float(r['walltime'][:-1]),
                                   int(r['memUsage']),
-                                  extract_expected_status(vtask_path),
-                                  extract_property_type(vtask_path)]
+                                  _extract_expected_status(vtask_path),
+                                  _extract_property_type(vtask_path)]
     return root.attrib['benchmarkname'], df
 
 
-def columns_to_dict(columns):
+def _columns_to_dict(columns):
     """
     Simple helper function, which converts column tags to a dictionary.
     :param columns: Collection of column tags
@@ -85,7 +85,7 @@ def columns_to_dict(columns):
     return ret
 
 
-def match_status_str(status_str):
+def _match_status_str(status_str):
     """
     Maps status strings to their associated meaning
     :param status_str: the status string
@@ -99,7 +99,7 @@ def match_status_str(status_str):
         return Status.unknown
 
 
-def extract_expected_status(vtask_path):
+def _extract_expected_status(vtask_path):
     """
     Extracts the expected status from a verification task.
 
@@ -113,11 +113,11 @@ def extract_expected_status(vtask_path):
     match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
-        return match_status_str(match.group(1))
+        return _match_status_str(match.group(1))
     raise MissingExpectedStatusException('Cannot extract expected status from filename / regex failed (wrong naming?)')
 
 
-def extract_property_type(vtask_path):
+def _extract_property_type(vtask_path):
     """
     Extracts the property type associated with a verification task.
     :param vtask_path: path to verification task

@@ -24,6 +24,17 @@ def read_results_values_test():
     nt.assert_equal(df.iloc[3]['options'], '--64')
 
 
+def match_status_str_test():
+    nt.assert_equal(svcomp._match_status_str('true'), svcomp.Status.true)
+    nt.assert_equal(svcomp._match_status_str('false'), svcomp.Status.false)
+    nt.assert_equal(svcomp._match_status_str('unknown'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp._match_status_str('TIMEOUT'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp._match_status_str('OUT OF MEMORY'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp._match_status_str('false(reach)'), svcomp.Status.false)
+    nt.assert_equal(svcomp._match_status_str('error'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp._match_status_str('EXCEPTION (Gremlins)'), svcomp.Status.unknown)
+
+
 def read_results_no_none_test():
     _, df = svcomp.svcomp_xml_to_dataframe('static/results-xml-raw/cbmc.14-12-04_1241.results.sv-comp15.mixed-examples.xml')
     for __, series in df.iterrows():
