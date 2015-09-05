@@ -3,12 +3,23 @@ Python module for reading SV-COMP 2015 results into memory.
 """
 
 from lxml import objectify
+from enum import Enum, unique
 import re
 import os
 import pandas as pd
 
-import PyPRSVT.preprocessing.utils as utils
-import PyPRSVT.basics as b
+
+@unique
+class PropertyType(Enum):
+    unreachability = 1
+    memory_safety = 2
+    termination = 3
+
+@unique
+class Status(Enum):
+    true = 1
+    false = 2
+    unknown = 3
 
 
 class MissingPropertyTypeException(Exception):
@@ -51,7 +62,7 @@ def svcomp_xml_to_dataframe(xml_path):
             vtask_path = source_file.attrib['name']
             r = columns_to_dict(source_file.column)
             df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
-                                  utils.match_status_str(r['status']),
+                                  match_status_str(r['status']),
                                   r['status'],
                                   float(r['cputime'][:-1]),
                                   float(r['walltime'][:-1]),
@@ -74,6 +85,20 @@ def columns_to_dict(columns):
     return ret
 
 
+def match_status_str(status_str):
+    """
+    Maps status strings to their associated meaning
+    :param status_str: the status string
+    :return: true, false, or unknown
+    """
+    if re.search(r'true', status_str):
+        return Status.true
+    if re.search(r'false', status_str):
+        return Status.false
+    else:
+        return Status.unknown
+
+
 def extract_expected_status(vtask_path):
     """
     Extracts the expected status from a verification task.
@@ -88,7 +113,7 @@ def extract_expected_status(vtask_path):
     match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
-        return utils.match_status_str(match.group(1))
+        return match_status_str(match.group(1))
     raise MissingExpectedStatusException('Cannot extract expected status from filename / regex failed (wrong naming?)')
 
 
@@ -112,9 +137,9 @@ def extract_property_type(vtask_path):
     with open(prp) as f:
         prp_file_content = f.read()
     if unreachability_pattern.search(prp_file_content) is not None:
-        return b.PropertyType.unreachability
+        return PropertyType.unreachability
     if memory_safety_pattern.search(prp_file_content) is not None:
-        return b.PropertyType.memory_safety
+        return PropertyType.memory_safety
     if termination_pattern.search(prp_file_content) is not None:
-        return b.PropertyType.termination
+        return PropertyType.termination
     raise MissingPropertyTypeException('Cannot determine property type from prp file')

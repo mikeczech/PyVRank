@@ -1,15 +1,14 @@
 import nose.tools as nt
-import PyPRSVT.preprocessing.utils as utils
-import PyPRSVT.basics as b
+import PyPRSVT.preprocessing.svcomp as svcomp
 
 
 def match_status_str_test():
-    nt.assert_equal(utils.match_status_str('true'), b.Status.true)
-    nt.assert_equal(utils.match_status_str('false'), b.Status.false)
-    nt.assert_equal(utils.match_status_str('unknown'), b.Status.unknown)
-    nt.assert_equal(utils.match_status_str('TIMEOUT'), b.Status.unknown)
-    nt.assert_equal(utils.match_status_str('OUT OF MEMORY'), b.Status.unknown)
-    nt.assert_equal(utils.match_status_str('false(reach)'), b.Status.false)
-    nt.assert_equal(utils.match_status_str('error'), b.Status.unknown)
-    nt.assert_equal(utils.match_status_str('EXCEPTION (Gremlins)'), b.Status.unknown)
+    nt.assert_equal(svcomp.match_status_str('true'), svcomp.Status.true)
+    nt.assert_equal(svcomp.match_status_str('false'), svcomp.Status.false)
+    nt.assert_equal(svcomp.match_status_str('unknown'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp.match_status_str('TIMEOUT'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp.match_status_str('OUT OF MEMORY'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp.match_status_str('false(reach)'), svcomp.Status.false)
+    nt.assert_equal(svcomp.match_status_str('error'), svcomp.Status.unknown)
+    nt.assert_equal(svcomp.match_status_str('EXCEPTION (Gremlins)'), svcomp.Status.unknown)
 
