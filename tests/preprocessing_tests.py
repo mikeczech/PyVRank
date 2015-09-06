@@ -46,10 +46,6 @@ def read_results_no_none_test():
 
 
 def read_category_test():
-    _, df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    print(df.to_string())
+    df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
+    # print(df.to_string())
 
-
-def ranking_test():
-    benchmarks, df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    x = 1

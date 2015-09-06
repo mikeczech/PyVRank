@@ -31,6 +31,14 @@ class MissingExpectedStatusException(Exception):
     pass
 
 
+class InvalidDataException(Exception):
+    pass
+
+
+_df_cols = ['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage',
+            'expected_status', 'property_type']
+
+
 def read_category(results_xml_raw_dir_path, category):
     """
     Reads a directory of raw xml SVCOMP results into a data frame.
@@ -39,13 +47,20 @@ def read_category(results_xml_raw_dir_path, category):
     :return: Pandas data frame
     """
     pattern = re.compile(r'\w+\.[0-9-_]+\.(witnesscheck\.[0-9-_]+\.)?results\.sv-comp15\.{0}\.xml'.format(category))
-    category_results = []
+    category_results = {}
+    category_witnesschecks = {}
     for file in os.listdir(results_xml_raw_dir_path):
         match = pattern.match(file)
         if match is not None:
-            category_results.append(svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file)))
-    category_results_dict = dict(category_results)
-    return list(category_results_dict.keys()), pd.concat(category_results_dict, axis=1)
+            benchmark, df = svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file))
+            if benchmark in category_witnesschecks or benchmark in category_results:
+                raise InvalidDataException('Already added data for benchmark {0}'.format(benchmark))
+            if 'witnesscheck' not in benchmark:
+                category_results[benchmark] = df
+            else:
+                category_witnesschecks[benchmark] = df
+    _apply_witnesschecks_on_results(category_results, category_witnesschecks)
+    return category_results
 
 
 def svcomp_xml_to_dataframe(xml_path):
@@ -58,8 +73,7 @@ def svcomp_xml_to_dataframe(xml_path):
     with open(xml_path) as f:
         xml = f.read()
     root = objectify.fromstring(xml)
-    df = pd.DataFrame(columns=['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage',
-                               'expected_status', 'property_type'])
+    df = pd.DataFrame(columns=_df_cols)
     if hasattr(root, 'sourcefile'):
         for source_file in root.sourcefile:
             vtask_path = source_file.attrib['name']
@@ -158,13 +172,13 @@ def score(status, expected_status):
     if status is Status.unknown:
         return 0
     if status is Status.false and expected_status is Status.false:
-        return 1
+        return 1 # correct
     if status is Status.false and expected_status is Status.true:
-        return -6
+        return -6 # false positive
     if status is Status.true and expected_status is Status.true:
-        return 2
+        return 2 # correct
     if status is Status.true and expected_status is Status.false:
-        return -12
+        return -12 # false negative
     assert False, 'No score for combination {0} and {1}'.format(status, expected_status)
 
 
@@ -180,5 +194,31 @@ def rank(result_a, result_b):
     return 1
 
 
-def extract_benchmarks(df):
-    pass
+def _apply_witnesschecks_on_results(results, witnesschecks):
+    for key in results.keys():
+        wcs = [wc for wc in witnesschecks.keys() if wc.startswith('{0}.'.format(key))]
+        if len(wcs) > 1:
+            raise InvalidDataException('PyPRSVT does not support multiple witnesscheck files.')
+        for wc in wcs:
+            df = pd.concat({key: results[key], wc: witnesschecks[wc]}, axis=1)
+            for row in df.iterrows():
+                sourcefile, series = row
+                if series[key, 'status'] is Status.false:
+                    results[key].set_value(sourcefile, 'status',
+                                           _apply_witnesscheck_on_status(series[key, 'status'],
+                                                                         series[wc, 'status']))
+
+
+def _apply_witnesscheck_on_status(status, status_witnesscheck):
+    if status is not Status.false:
+        raise InvalidDataException('Sourcefile with status true or unknown does not provide witnesschecks.')
+    # witnesscheck was performed internally (e.g. by CBMC)
+    if pd.isnull(status_witnesscheck):
+        return Status.false
+    # external witnesscheck results
+    if status_witnesscheck is Status.false:
+        return Status.false
+    return Status.unknown
+
+
+
