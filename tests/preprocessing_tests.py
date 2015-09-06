@@ -45,7 +45,11 @@ def read_results_no_none_test():
             nt.assert_not_equal(value, None)
 
 
-def read_category_test():
-    df = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    # print(df.to_string())
+def witnesscheck_test():
+    category_results_nowc = svcomp.read_category('static/results-xml-raw', 'mixed-examples', False)
+    category_results = svcomp.read_category('static/results-xml-raw', 'mixed-examples', True)
+    nt.assert_equal(category_results_nowc['smack'].iloc[0]['status'], svcomp.Status.false)
+    nt.assert_equal(category_results['smack'].iloc[0]['status'], svcomp.Status.unknown)
+    nt.assert_equal(category_results_nowc['cbmc'].iloc[0]['status'], svcomp.Status.true)
+    nt.assert_equal(category_results['cbmc'].iloc[0]['status'], svcomp.Status.true)
 

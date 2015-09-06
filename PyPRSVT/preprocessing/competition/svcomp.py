@@ -39,7 +39,7 @@ _df_cols = ['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage
             'expected_status', 'property_type']
 
 
-def read_category(results_xml_raw_dir_path, category):
+def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
     """
     Reads a directory of raw xml SVCOMP results into a data frame.
 
@@ -59,7 +59,8 @@ def read_category(results_xml_raw_dir_path, category):
                 category_results[benchmark] = df
             else:
                 category_witnesschecks[benchmark] = df
-    _apply_witnesschecks_on_results(category_results, category_witnesschecks)
+    if witnesscheck:
+        _apply_witnesschecks_on_results(category_results, category_witnesschecks)
     return category_results
 
 
