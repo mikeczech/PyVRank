@@ -15,6 +15,7 @@ class PropertyType(Enum):
     memory_safety = 2
     termination = 3
 
+
 @unique
 class Status(Enum):
     true = 1
@@ -24,6 +25,7 @@ class Status(Enum):
 
 class MissingPropertyTypeException(Exception):
     pass
+
 
 class MissingExpectedStatusException(Exception):
     pass
@@ -42,7 +44,8 @@ def read_category(results_xml_raw_dir_path, category):
         match = pattern.match(file)
         if match is not None:
             category_results.append(svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file)))
-    return pd.concat(dict(category_results), axis=1)
+    category_results_dict = dict(category_results)
+    return list(category_results_dict.keys()), pd.concat(category_results_dict, axis=1)
 
 
 def svcomp_xml_to_dataframe(xml_path):
@@ -175,3 +178,7 @@ def rank(result_a, result_b):
     if result_a['cputime'] > result_b['cputime']:
         return 2
     return 1
+
+
+def extract_benchmarks(df):
+    pass
