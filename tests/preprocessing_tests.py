@@ -1,4 +1,5 @@
 import nose.tools as nt
+import pandas as pd
 
 from PyPRSVT.preprocessing.competition import svcomp
 from PyPRSVT.preprocessing import ranking
@@ -43,6 +44,7 @@ def read_results_no_none_test():
     for __, series in df.iterrows():
         for ___, value in series.iteritems():
             nt.assert_not_equal(value, None)
+            nt.assert_true(not pd.isnull(value))
 
 
 def witnesscheck_test():
