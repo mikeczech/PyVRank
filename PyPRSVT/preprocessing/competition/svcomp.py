@@ -180,6 +180,8 @@ def score(status, expected_status):
         return 2 # correct
     if status is Status.true and expected_status is Status.false:
         return -12 # false negative
+    if pd.isnull(status) or pd.isnull(expected_status):
+        raise InvalidDataException('Cannot compare status if it is not available (NaN)')
     assert False, 'No score for combination {0} and {1}'.format(status, expected_status)
 
 

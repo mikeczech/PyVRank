@@ -55,3 +55,10 @@ def witnesscheck_test():
     nt.assert_equal(category_results_nowc['cbmc'].iloc[0]['status'], svcomp.Status.true)
     nt.assert_equal(category_results['cbmc'].iloc[0]['status'], svcomp.Status.true)
 
+
+def create_tool_ranking_test():
+    category_results = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
+    r = ranking.create_tool_ranking(category_results, svcomp.compare_results)
+    print(r)
+
+
