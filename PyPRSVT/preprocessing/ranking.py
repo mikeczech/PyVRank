@@ -4,7 +4,8 @@ Python module for preprocessing software verification competition results to sol
 import pandas as pd
 from itertools import permutations
 
-def create_tool_ranking(results, compare_results):
+
+def _create_tool_ranking(results, compare_results):
     tools = list(results.keys())
     tool_permutations = list(permutations(tools, 2))
     ret = {}
@@ -21,3 +22,11 @@ def create_tool_ranking(results, compare_results):
                 preferences.append('{0} >= {1}'.format(tool_a, tool_b))
         ret[sourcefile] = preferences
     return ret
+
+
+def create_tool_ranking_df(results, compare_results):
+    df = pd.DataFrame(columns=['ranking'])
+    tool_ranking = _create_tool_ranking(results, compare_results)
+    for vtask_path in tool_ranking.keys():
+        df.loc[vtask_path] = ','.join(tool_ranking[vtask_path])
+    return df
