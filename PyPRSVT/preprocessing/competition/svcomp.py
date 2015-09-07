@@ -186,6 +186,12 @@ def score(status, expected_status):
 
 
 def compare_results(result_a, result_b):
+    """
+    Todo
+    :param result_a:
+    :param result_b:
+    :return:
+    """
     score_a = score(result_a['status'], result_a['expected_status'])
     score_b = score(result_b['status'], result_b['expected_status'])
     if score_a > score_b:
@@ -200,6 +206,12 @@ def compare_results(result_a, result_b):
 
 
 def _apply_witnesschecks_on_results(results, witnesschecks):
+    """
+    Todo
+    :param results:
+    :param witnesschecks:
+    :return:
+    """
     for key in results.keys():
         wcs = [wc for wc in witnesschecks.keys() if wc.startswith('{0}.'.format(key))]
         if len(wcs) > 1:
@@ -215,6 +227,12 @@ def _apply_witnesschecks_on_results(results, witnesschecks):
 
 
 def _apply_witnesscheck_on_status(status, status_witnesscheck):
+    """
+    Todo
+    :param status:
+    :param status_witnesscheck:
+    :return:
+    """
     if status is not Status.false:
         raise InvalidDataException('Sourcefile with status true or unknown does not provide witnesschecks.')
     # witnesscheck was performed internally (e.g. by CBMC)
@@ -224,6 +242,4 @@ def _apply_witnesscheck_on_status(status, status_witnesscheck):
     if status_witnesscheck is Status.false:
         return Status.false
     return Status.unknown
-
-
 

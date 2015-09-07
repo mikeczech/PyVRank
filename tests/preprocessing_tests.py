@@ -58,7 +58,6 @@ def witnesscheck_test():
 
 def create_tool_ranking_test():
     category_results = svcomp.read_category('static/results-xml-raw', 'mixed-examples')
-    df = ranking.create_tool_ranking_df(category_results, svcomp.compare_results)
-    print(r)
-
+    df = ranking.create_benchmark_ranking_df(category_results, svcomp.compare_results)
+    df.to_csv('test.csv')
 
