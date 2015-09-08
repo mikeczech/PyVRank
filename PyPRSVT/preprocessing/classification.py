@@ -14,7 +14,7 @@ def create_benchmark_score_df(results, score):
                                               label_title='score')
 
 
-def create_benchmark_ranking_df(results, compare_results):
+def create_benchmark_best_tool_df(results, compare_results):
     """
     Todo
     :param results:
