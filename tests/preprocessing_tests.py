@@ -59,12 +59,23 @@ def witnesscheck_test():
 def create_benchmark_ranking_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
     df = ranking.create_benchmark_ranking_df(category_results, svcomp15.compare_results)
+    df.to_csv('ranking_df.csv')
     # Todo
 
 
 def create_benchmark_score_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
     df = classification.create_benchmark_score_df(category_results, svcomp15.score)
+    df['cbmc'].to_csv('cmbc_score_df.csv')
+    df['cpachecker'].to_csv('cpachecker_score_df.csv')
+    df['smack'].to_csv('smack_score_df.csv')
+    # Todo
+
+
+def create_benchmark_best_tool_df_test():
+    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
+    df = classification.create_benchmark_best_tool_df(category_results, svcomp15.compare_results)
+    df.to_csv('best_tool_df.csv')
     # Todo
 
 
