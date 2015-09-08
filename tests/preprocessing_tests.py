@@ -2,7 +2,7 @@ import nose.tools as nt
 import pandas as pd
 
 from PyPRSVT.preprocessing.competition import svcomp15
-from PyPRSVT.preprocessing import ranking, classification, utils
+from PyPRSVT.preprocessing import regression, ranking, classification, utils
 
 
 def read_results_values_test():
@@ -69,6 +69,15 @@ def create_benchmark_score_df_test():
     df['cbmc'].to_csv('cmbc_score_df.csv')
     df['cpachecker'].to_csv('cpachecker_score_df.csv')
     df['smack'].to_csv('smack_score_df.csv')
+    # Todo
+
+
+def create_benchmark_cputime_df_test():
+    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
+    df = regression.create_benchmark_cputime_df(category_results)
+    df['cbmc'].to_csv('cmbc_cputime_df.csv')
+    df['cpachecker'].to_csv('cpachecker_cputime_df.csv')
+    df['smack'].to_csv('smack_cputime_df.csv')
     # Todo
 
 
