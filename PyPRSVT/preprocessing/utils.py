@@ -19,7 +19,7 @@ def create_benchmark_labeling_df(results, label_val, label_title='label'):
     return ret
 
 
-def derive_total_benchmark_order(results, compare_results):
+def derive_total_benchmark_order(results, sourcefile, compare_results):
     """
     Todo
     :param relations:
@@ -29,6 +29,9 @@ def derive_total_benchmark_order(results, compare_results):
     for i in results.keys():
         for j in results.keys():
             if i != j:
-                if compare_results(results[i], results[j]) in [0, 1]:
+                if compare_results(results[i].loc[sourcefile], results[j].loc[sourcefile]) in [0, 1]:
                     higher_than_counter[i] += 1
-    return sorted(results.keys(), reversed=True, key=lambda x: higher_than_counter[x])
+    ret = sorted(results.keys(), reverse=True, key=lambda x: higher_than_counter[x])
+    assert len(ret) > 0
+    return ret
+

@@ -2,7 +2,7 @@ import nose.tools as nt
 import pandas as pd
 
 from PyPRSVT.preprocessing.competition import svcomp15
-from PyPRSVT.preprocessing import ranking, classification
+from PyPRSVT.preprocessing import ranking, classification, utils
 
 
 def read_results_values_test():
@@ -59,10 +59,19 @@ def witnesscheck_test():
 def create_benchmark_ranking_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
     df = ranking.create_benchmark_ranking_df(category_results, svcomp15.compare_results)
-    df.to_csv('test.csv')
+    # Todo
 
 
 def create_benchmark_score_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
     df = classification.create_benchmark_score_df(category_results, svcomp15.score)
-    df.to_csv('test1.csv')
+    # Todo
+
+
+def derive_total_benchmark_order_test():
+    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
+    r = utils.derive_total_benchmark_order(
+        category_results,
+        'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i',
+        svcomp15.compare_results)
+    nt.assert_equal(r, ['cpachecker', 'smack', 'cbmc'])
