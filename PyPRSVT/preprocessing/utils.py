@@ -19,10 +19,16 @@ def create_benchmark_labeling_df(results, label_val, label_title='label'):
     return ret
 
 
-def derive_total_order_from_relations(relations):
+def derive_total_benchmark_order(results, compare_results):
     """
     Todo
     :param relations:
     :return:
     """
-    pass
+    higher_than_counter = {k: 0 for k in results.keys()}
+    for i in results.keys():
+        for j in results.keys():
+            if i != j:
+                if compare_results(results[i], results[j]) in [0, 1]:
+                    higher_than_counter[i] += 1
+    return sorted(results.keys(), reversed=True, key=lambda x: higher_than_counter[x])
