@@ -3,6 +3,7 @@ import pandas as pd
 
 from PyPRSVT.preprocessing.competition import svcomp15
 from PyPRSVT.preprocessing import regression, ranking, classification, utils
+from PyPRSVT.preprocessing.verifolio import features
 
 
 def read_results_values_test():
@@ -90,3 +91,9 @@ def derive_total_benchmark_order_test():
         'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i',
         svcomp15.compare_results)
     nt.assert_equal(r, ['cpachecker', 'smack', 'cbmc'])
+
+
+def verifolio_feature_extraction_test():
+    file = 'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i'
+    metrics = features.extract_features(file)
+    print(metrics)
