@@ -95,5 +95,7 @@ def derive_total_benchmark_order_test():
 
 def verifolio_feature_extraction_test():
     file = 'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i'
+    file2 = 'static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i'
     metrics = features.extract_features(file)
-    print(metrics)
+    df = features.create_feature_df([file, file2])
+    print(df.to_string())
