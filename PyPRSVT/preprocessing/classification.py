@@ -1,7 +1,7 @@
 import pandas as pd
 from PyPRSVT.preprocessing import utils
 
-def create_benchmark_score_df(results, score):
+def create_benchmark_score_dfdict(results, score):
     """
     Todo
     :param results:
@@ -9,7 +9,7 @@ def create_benchmark_score_df(results, score):
     :return:
     """
     label_val = lambda df: score(df['status'], df['expected_status'])
-    return utils.create_benchmark_labeling_df(results,
+    return utils.create_benchmark_labeling_dfdict(results,
                                               label_val,
                                               label_title='score')
 

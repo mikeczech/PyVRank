@@ -1,6 +1,6 @@
 import pandas as pd
 
-def create_benchmark_labeling_df(results, label_val, label_title='label'):
+def create_benchmark_labeling_dfdict(results, label_val, label_title='label'):
     """
     Todo
     :param results:

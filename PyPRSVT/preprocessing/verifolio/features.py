@@ -30,3 +30,13 @@ def create_feature_df(sourcefiles):
         metrics.update(features['role_metrics'])
         data.append(metrics)
     return pd.DataFrame(data, index=sourcefiles)
+
+
+def create_features_labels_df(feature_df, labels_df):
+    """
+    Todo
+    :param feature_df:
+    :param labels_df:
+    :return:
+    """
+    return pd.concat([feature_df, labels_df], axis=1)

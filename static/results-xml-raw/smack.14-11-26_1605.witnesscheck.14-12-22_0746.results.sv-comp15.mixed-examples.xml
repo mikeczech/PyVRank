@@ -57,7 +57,7 @@
     <column hidden="true" title="vcloud-energy" value="{u'core': -30888836, u'cpu': 184375866, u'uncore': 32828, u'external': 1800000}"/>
     <column hidden="true" title="exitcode" value="0"/>
   </sourcefile>
-  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i]" name="static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call2_ground.i">
+  <sourcefile files="[static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call_ground.i]" name="static/sv-benchmarks/c/mixed-examples/sorting_bubblesort_false-unreach-call_ground.i">
     <column title="status" value="true"/>
     <column title="cputime" value="2.100822811s"/>
     <column title="walltime" value="1.15978002548s"/>

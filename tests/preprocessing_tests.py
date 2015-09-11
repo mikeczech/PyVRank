@@ -3,7 +3,6 @@ import pandas as pd
 
 from PyPRSVT.preprocessing.competition import svcomp15
 from PyPRSVT.preprocessing import regression, ranking, classification, utils
-from PyPRSVT.preprocessing.verifolio import features
 
 
 def read_results_values_test():
@@ -61,7 +60,7 @@ def create_benchmark_ranking_df_test():
 
 def create_benchmark_score_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = classification.create_benchmark_score_df(category_results, svcomp15.score)
+    df = classification.create_benchmark_score_dfdict(category_results, svcomp15.score)
     df['cbmc'].to_csv('cmbc_score_df.csv')
     df['cpachecker'].to_csv('cpachecker_score_df.csv')
     df['smack'].to_csv('smack_score_df.csv')
@@ -70,7 +69,7 @@ def create_benchmark_score_df_test():
 
 def create_benchmark_cputime_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = regression.create_benchmark_cputime_df(category_results)
+    df = regression.create_benchmark_cputime_dfdict(category_results)
     df['cbmc'].to_csv('cmbc_cputime_df.csv')
     df['cpachecker'].to_csv('cpachecker_cputime_df.csv')
     df['smack'].to_csv('smack_cputime_df.csv')
@@ -93,9 +92,3 @@ def derive_total_benchmark_order_test():
     nt.assert_equal(r, ['cpachecker', 'smack', 'cbmc'])
 
 
-def verifolio_feature_extraction_test():
-    file = 'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i'
-    file2 = 'static/sv-benchmarks/c/mixed-examples/lockfree-3.0_true-valid-memsafety.i'
-    metrics = features.extract_features(file)
-    df = features.create_feature_df([file, file2])
-    print(df.to_string())
