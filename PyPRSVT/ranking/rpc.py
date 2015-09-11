@@ -1,6 +1,7 @@
 import pandas as pd
 import ast
 from itertools import combinations
+import numpy as np
 
 class RPC(object):
 
@@ -12,11 +13,11 @@ class RPC(object):
         self.bin_clfs = bin_clfs
         self.base = base
 
-    def __reverse_rel(self, rel):
+    def __reverse_rel(rel):
         rel_parts = [r.strip() for r in rel.split('>=')]
         return '{0} >= {1}'.format(rel_parts[1], rel_parts[0])
 
-    def fit(self, X, y):
+    def fit(self, X_df, y_df):
         """
         Todo
         :param X:
@@ -24,15 +25,20 @@ class RPC(object):
         :return:
         """
         for rel in self.bin_clfs.keys():
-            y_rel = []
-            for rel_set in y:
+            y_rel_df = pd.DataFrame(columns=['y'])
+            for row in y_df.iterrows():
+                p, rel_set = row
                 rel_set = ast.literal_eval(rel_set)
                 if rel in rel_set:
-                    y_rel.append(1)
-                elif self.__reverse_rel(rel):
-                    y_rel.append(0)
+                    y_rel_df.loc[p] = 1
+                elif RPC.__reverse_rel(rel):
+                    y_rel_df.loc[p] = 0
                 else:
-                    y_rel.append(None)
+                    y_rel_df.loc[p] = np.NaN
+            rel_df = pd.concat([X_df, y_rel_df], axis=1)
+            rel_df.dropna()
+            # Todo solve ML problem with base learner
+
 
 
     def predict(self):
