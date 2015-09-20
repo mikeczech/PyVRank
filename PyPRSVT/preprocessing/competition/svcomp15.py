@@ -199,9 +199,9 @@ def compare_results(result_a, result_b):
     if score_b > score_a:
         return -1
     if result_a['cputime'] > result_b['cputime']:
-        return 1
-    if result_b['cputime'] > result_a['cputime']:
         return -1
+    if result_b['cputime'] > result_a['cputime']:
+        return 1
     return 0
 
 
