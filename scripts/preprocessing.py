@@ -17,10 +17,12 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', type=str, required=True)
     parser.add_argument('-d', '--dir', type=str, required=False)
     parser.add_argument('-R', '--recursive', action='store_true', required=False)
+    parser.add_argument('--fromcvs', action='store_true', required=False)
     parser.add_argument('--preferences', action='store_true', required=False)
     parser.add_argument('--features', action='store_true', required=False)
+    parser.add_argument('--merge', type=str, nargs='+', required=False)
     args = parser.parse_args()
-    if not any([args.preferences, args.features]):
+    if not any([args.preferences, args.features, args.merge]):
         parser.print_usage()
         quit()
 
@@ -35,9 +37,16 @@ if __name__ == '__main__':
         ret.to_csv(args.output)
 
     # Write data set with verifolio features to output
-    if all([args.features, args.dir]):
+    elif all([args.features, args.dir]):
         sourcefiles = []
-        if args.recursive:
+        if args.fromcvs:
+            for csv in os.listdir(args.dir):
+                csv_path = join(args.dir, csv)
+                if csv_path.endswith('.csv') and isfile(csv_path):
+                    df = pd.DataFrame.from_csv(csv_path)
+                    for (index, _) in df.iterrows():
+                        sourcefiles.append(index)
+        elif args.recursive:
             for (dirpath, dirnames, filenames) in os.walk(args.dir):
                 for f in filenames:
                     if c_or_i(f):
@@ -45,5 +54,17 @@ if __name__ == '__main__':
         else:
             sourcefiles.extend([join(args.dir, f) for f in os.listdir(args.dir)
                                 if isfile(join(args.dir, f)) and c_or_i(f)])
-        ret = vf.create_feature_df(sourcefiles)
+        ret = vf.create_feature_df(set(sourcefiles))
         ret.to_csv(args.output)
+
+    # Merge N csv files
+    elif args.merge:
+        dfs = [pd.DataFrame.from_csv(f) for f in args.merge]
+        ret = pd.concat(dfs, axis=1)
+        ret.dropna()
+        ret.to_csv(args.output)
+
+    # Wrong arguments, therefore print usage
+    else:
+        parser.print_usage()
+        quit()
