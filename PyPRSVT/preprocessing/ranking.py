@@ -3,6 +3,9 @@ Python module for preprocessing software verification competition results to sol
 """
 import pandas as pd
 from itertools import combinations
+from collections import namedtuple
+
+Geq = namedtuple('GreaterOrEqualThan', 'a b')
 
 
 def create_benchmark_ranking_df(results, compare_results):
@@ -25,7 +28,7 @@ def create_benchmark_ranking_df(results, compare_results):
             tool_a, tool_b = pair
             c = compare_results(results_df[tool_a], results_df[tool_b])
             if c == 1 or c == 0:
-                preferences.append('{0} >= {1}'.format(tool_a, tool_b))
+                preferences.append(Geq(tool_a, tool_b))
         ret_df.set_value(sourcefile, 'ranking', preferences)
     return ret_df, results.keys()
 

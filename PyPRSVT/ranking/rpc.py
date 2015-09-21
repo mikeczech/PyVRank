@@ -2,6 +2,7 @@ import pandas as pd
 import ast
 from itertools import combinations
 import numpy as np
+from PyPRSVT.preprocessing.ranking import Geq
 
 
 class RPC(object):
@@ -10,10 +11,10 @@ class RPC(object):
         self.base_learner = base_learner
         self.bl_options = bl_options
         self.fitted = False
+        self.bin_clfs = {}
 
-    def __reverse_rel(rel):
-        rel_parts = [r.strip() for r in rel.split('>=')]
-        return '{0} >= {1}'.format(rel_parts[1], rel_parts[0])
+    def __reverse_rel(self, rel):
+        return Geq(rel.b, rel.a)
 
     def fit(self, labels, X_df, y_sr):
         """
@@ -23,9 +24,8 @@ class RPC(object):
         :return:
         """
         # Initialize base learners
-        self.bin_clfs = {}
         for rel in combinations(labels, 2):
-            self.bin_clfs['{0} >= {1}'.format(rel[0], rel[1])] \
+            self.bin_clfs[Geq(rel[0], rel[1])] \
                 = self.base_learner(**self.bl_options) if self.bl_options else self.base_learner()
 
         # Create multiple binary classification problems from data
@@ -39,15 +39,35 @@ class RPC(object):
                     y_rel_df.loc[p] = 0
                 else:
                     y_rel_df.loc[p] = np.NaN
+
             # Only use rows where the label is not NaN
             rel_df = pd.concat([X_df, y_rel_df], axis=1)
             rel_df.dropna(inplace=True)
+
             # Solve binary ML problem with base learner
             X = rel_df.drop('y', 1).values
             y = rel_df['y'].values
             self.bin_clfs[rel].fit(X, y)
+
         self.fitted = True
 
+    def __R(self, X, i, j):
+        if Geq(i, j) in self.bin_clfs.keys():
+            return np.array(self.bin_clfs[Geq(i, j)].predict_proba(X))
+        else:
+            return 1 - np.array(self.bin_clfs[Geq(i, j)].predict_proba(X))
 
-    def predict(self):
-        pass
+    def predict(self, labels, X):
+        """
+        Todo
+        :param labels:
+        :param X:
+        :return:
+        """
+        # Compute scores
+        scores = {}
+        for l in labels:
+            scores[l] = sum([self.__R(X, l, ll) for ll in labels if ll != l])
+
+        # Build rankings from scores
+        return [sorted([l for l in labels], key=lambda l: scores[l][x]) for x in X]
