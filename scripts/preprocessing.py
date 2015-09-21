@@ -17,12 +17,11 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', type=str, required=True)
     parser.add_argument('-d', '--dir', type=str, required=False)
     parser.add_argument('-R', '--recursive', action='store_true', required=False)
-    parser.add_argument('--fromcvs', action='store_true', required=False)
+    parser.add_argument('--fromcsv', nargs='+', required=False)
     parser.add_argument('--preferences', action='store_true', required=False)
     parser.add_argument('--features', action='store_true', required=False)
-    parser.add_argument('--merge', type=str, nargs='+', required=False)
     args = parser.parse_args()
-    if not any([args.preferences, args.features, args.merge]):
+    if not any([args.preferences, args.features]):
         parser.print_usage()
         quit()
 
@@ -30,22 +29,23 @@ if __name__ == '__main__':
     if all([args.preferences, args.category, args.dir]):
         dfs = []
         for c in args.category:
-            results = svcomp15.read_category(args.results, args.dir)
-            df = ranking.create_benchmark_ranking_df(results, svcomp15.compare_results)
+            results = svcomp15.read_category(args.dir, c)
+            df, tools = ranking.create_benchmark_ranking_df(results, svcomp15.compare_results)
             dfs.append(df)
         ret = pd.concat(dfs)
         ret.to_csv(args.output)
+        with open(args.output + '.tools', 'w') as f:
+            f.write(",".join(tools))
+
 
     # Write data set with verifolio features to output
-    elif all([args.features, args.dir]):
+    elif args.features and any([args.dir, args.fromcvs]):
         sourcefiles = []
-        if args.fromcvs:
-            for csv in os.listdir(args.dir):
-                csv_path = join(args.dir, csv)
-                if csv_path.endswith('.csv') and isfile(csv_path):
-                    df = pd.DataFrame.from_csv(csv_path)
-                    for (index, _) in df.iterrows():
-                        sourcefiles.append(index)
+        if args.fromcsv:
+            for csv in args.fromcsv:
+                df = pd.DataFrame.from_csv(csv)
+                for (index, _) in df.iterrows():
+                    sourcefiles.append(index)
         elif args.recursive:
             for (dirpath, dirnames, filenames) in os.walk(args.dir):
                 for f in filenames:
@@ -55,13 +55,6 @@ if __name__ == '__main__':
             sourcefiles.extend([join(args.dir, f) for f in os.listdir(args.dir)
                                 if isfile(join(args.dir, f)) and c_or_i(f)])
         ret = vf.create_feature_df(set(sourcefiles))
-        ret.to_csv(args.output)
-
-    # Merge N csv files
-    elif args.merge:
-        dfs = [pd.DataFrame.from_csv(f) for f in args.merge]
-        ret = pd.concat(dfs, axis=1)
-        ret.dropna()
         ret.to_csv(args.output)
 
     # Wrong arguments, therefore print usage
