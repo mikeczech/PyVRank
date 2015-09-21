@@ -20,3 +20,4 @@ if __name__ == '__main__':
     learner = rpc.RPC(svm.SVC, probability=True)
     X_df = df.drop('ranking', 1)
     learner.fit(tools, X_df, df['ranking'])
+    print(learner.predict(tools, [X_df.iloc[0].values]))

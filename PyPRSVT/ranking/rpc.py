@@ -32,10 +32,11 @@ class RPC(object):
         for rel in self.bin_clfs.keys():
             y_rel_df = pd.DataFrame(columns=['y'])
             for (p, rel_set) in y_sr.iteritems():
-                prefs = ast.literal_eval(rel_set)
+                # Todo: Find better solution as eval
+                prefs = eval(rel_set)
                 if rel in prefs:
                     y_rel_df.loc[p] = 1
-                elif RPC.__reverse_rel(rel):
+                elif self.__reverse_rel(rel):
                     y_rel_df.loc[p] = 0
                 else:
                     y_rel_df.loc[p] = np.NaN
@@ -55,7 +56,7 @@ class RPC(object):
         if Geq(i, j) in self.bin_clfs.keys():
             return np.array(self.bin_clfs[Geq(i, j)].predict_proba(X))
         else:
-            return 1 - np.array(self.bin_clfs[Geq(i, j)].predict_proba(X))
+            return 1 - np.array(self.bin_clfs[Geq(j, i)].predict_proba(X))
 
     def predict(self, labels, X):
         """
@@ -70,4 +71,4 @@ class RPC(object):
             scores[l] = sum([self.__R(X, l, ll) for ll in labels if ll != l])
 
         # Build rankings from scores
-        return [sorted([l for l in labels], key=lambda l: scores[l][x]) for x in X]
+        return [sorted([l for l in labels], key=lambda l: scores[l][i]) for i, _ in enumerate(X)]

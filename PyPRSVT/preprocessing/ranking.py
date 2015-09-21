@@ -5,7 +5,7 @@ import pandas as pd
 from itertools import combinations
 from collections import namedtuple
 
-Geq = namedtuple('GreaterOrEqualThan', 'a b')
+Geq = namedtuple('Geq', 'a b')
 
 
 def create_benchmark_ranking_df(results, compare_results):
