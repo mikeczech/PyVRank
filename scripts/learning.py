@@ -1,4 +1,5 @@
 from PyPRSVT.ranking import rpc
+from PyPRSVT.ranking import cross_validation as cv
 import pandas as pd
 from sklearn import svm
 import argparse
@@ -17,7 +18,14 @@ if __name__ == '__main__':
     # Prepare data for RPC algorithm
     df = pd.concat([features_df, observations_df], axis=1)
     df.dropna(inplace=True)
-    learner = rpc.RPC(svm.SVC, probability=True)
+    clf = rpc.RPC(svm.SVC, probability=True)
     X_df = df.drop('ranking', 1)
-    learner.fit(tools, X_df, df['ranking'])
-    print(learner.predict(tools, [X_df.iloc[0].values, X_df.iloc[2].values]))
+    y_df = df['ranking']
+    scores = cv.cross_val_score(clf, X_df, y_df, cv=5)
+
+
+
+
+
+    clf.fit(tools, X_df, df['ranking'])
+    print(clf.predict(tools, [X_df.iloc[0].values, X_df.iloc[2].values]))

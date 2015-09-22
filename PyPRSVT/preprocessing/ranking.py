@@ -31,4 +31,3 @@ def create_benchmark_ranking_df(results, compare_results):
                 preferences.append(Geq(tool_a, tool_b))
         ret_df.set_value(sourcefile, 'ranking', preferences)
     return ret_df, results.keys()
-

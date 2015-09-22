@@ -7,16 +7,17 @@ from PyPRSVT.preprocessing.ranking import Geq
 
 class RPC(object):
 
-    def __init__(self, base_learner, **bl_options):
+    def __init__(self, labels, base_learner, **bl_options):
         self.base_learner = base_learner
         self.bl_options = bl_options
         self.fitted = False
         self.bin_clfs = {}
+        self.labels = labels
 
     def __reverse_rel(self, rel):
         return Geq(rel.b, rel.a)
 
-    def fit(self, labels, X_df, y_sr):
+    def fit(self, X_df, y_sr):
         """
         Todo
         :param X:
@@ -24,7 +25,7 @@ class RPC(object):
         :return:
         """
         # Initialize base learners
-        for rel in combinations(labels, 2):
+        for rel in combinations(self.labels, 2):
             self.bin_clfs[Geq(rel[0], rel[1])] \
                 = self.base_learner(**self.bl_options) if self.bl_options else self.base_learner()
 
@@ -58,7 +59,7 @@ class RPC(object):
         else:
             return 1 - np.array([x[1] for x in self.bin_clfs[Geq(j, i)].predict_proba(X)])
 
-    def predict(self, labels, X):
+    def predict(self, X):
         """
         Todo
         :param labels:
@@ -67,8 +68,18 @@ class RPC(object):
         """
         # Compute scores
         scores = {}
-        for l in labels:
+        for l in self.labels:
             scores[l] = sum([self.__R(X, l, ll) for ll in labels if ll != l])
 
         # Build rankings from scores
         return [sorted([l for l in labels], key=lambda l: scores[l][i]) for i, _ in enumerate(X)]
+
+    def score(self, X, y):
+        """
+        Accuracy w.r.t. Spearman rank correlation.
+        :param X:
+        :param y:
+        :return:
+        """
+        predictions = self.predict(X)
+
