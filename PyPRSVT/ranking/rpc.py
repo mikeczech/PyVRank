@@ -1,8 +1,21 @@
 import pandas as pd
-import ast
 from itertools import combinations
+from collections import namedtuple
+from ast import literal_eval
 import numpy as np
-from PyPRSVT.preprocessing.ranking import Geq
+from PyPRSVT.preprocessing.ranking import Ranking
+import logging
+
+
+rpc_logger = logging.getLogger('PyPRSVT.RPC')
+rpc_logger.setLevel(logging.INFO)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+rpc_logger.addHandler(ch)
+
+# GreaterOrEqualThan
+Geq = namedtuple('Geq', 'a b')
 
 
 class RPC(object):
@@ -14,9 +27,6 @@ class RPC(object):
         self.bin_clfs = {}
         self.labels = labels
 
-    def __reverse_rel(self, rel):
-        return Geq(rel.b, rel.a)
-
     def fit(self, X_df, y_sr):
         """
         Todo
@@ -25,22 +35,28 @@ class RPC(object):
         :return:
         """
         # Initialize base learners
-        for rel in combinations(self.labels, 2):
-            self.bin_clfs[Geq(rel[0], rel[1])] \
+        for (a, b) in combinations(self.labels, 2):
+            self.bin_clfs[Geq(a, b)] \
                 = self.base_learner(**self.bl_options) if self.bl_options else self.base_learner()
+
+        rpc_logger.info('Decomposed label ranking problem into {} binary classification problems'
+                        .format(len(self.bin_clfs.keys())))
 
         # Create multiple binary classification problems from data
         for rel in self.bin_clfs.keys():
+
+            rpc_logger.info('Solving binary classification problem for {} > {}'
+                            .format(rel.a, rel.b))
+
             y_rel_df = pd.DataFrame(columns=['y'])
-            for (p, rel_set) in y_sr.iteritems():
-                # Todo: Find better solution than eval
-                prefs = eval(rel_set)
-                if rel in prefs:
-                    y_rel_df.loc[p] = 1
-                elif self.__reverse_rel(rel):
-                    y_rel_df.loc[p] = 0
-                else:
+            for (p, r) in y_sr.iteritems():
+                ranking = Ranking(literal_eval(r))
+                if not ranking.part_of(rel.a, rel.b):
                     y_rel_df.loc[p] = np.NaN
+                elif ranking.greater_or_equal_than(rel.a, rel.b):
+                    y_rel_df.loc[p] = 1
+                else:
+                    y_rel_df.loc[p] = 0
 
             # Only use rows where the label is not NaN
             rel_df = pd.concat([X_df, y_rel_df], axis=1)
@@ -50,6 +66,10 @@ class RPC(object):
             X = rel_df.drop('y', 1).values
             y = rel_df['y'].values
             self.bin_clfs[rel].fit(X, y)
+
+            scores = self.bin_clfs[rel].score(X, y)
+            rpc_logger.info('Accuracy on training data: {} (+/- {})'
+                            .format(scores.mean(), scores.std() * 2))
 
         self.fitted = True
 
@@ -69,10 +89,10 @@ class RPC(object):
         # Compute scores
         scores = {}
         for l in self.labels:
-            scores[l] = sum([self.__R(X, l, ll) for ll in labels if ll != l])
+            scores[l] = sum([self.__R(X, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
-        return [sorted([l for l in labels], key=lambda l: scores[l][i]) for i, _ in enumerate(X)]
+        return [sorted([l for l in self.labels], key=lambda l: scores[l][i]) for i, _ in enumerate(X)]
 
     def score(self, X, y):
         """
