@@ -32,7 +32,7 @@ class RPC(object):
         for rel in self.bin_clfs.keys():
             y_rel_df = pd.DataFrame(columns=['y'])
             for (p, rel_set) in y_sr.iteritems():
-                # Todo: Find better solution as eval
+                # Todo: Find better solution than eval
                 prefs = eval(rel_set)
                 if rel in prefs:
                     y_rel_df.loc[p] = 1
@@ -54,9 +54,9 @@ class RPC(object):
 
     def __R(self, X, i, j):
         if Geq(i, j) in self.bin_clfs.keys():
-            return np.array(self.bin_clfs[Geq(i, j)].predict_proba(X))
+            return np.array([x[1] for x in self.bin_clfs[Geq(i, j)].predict_proba(X)])
         else:
-            return 1 - np.array(self.bin_clfs[Geq(j, i)].predict_proba(X))
+            return 1 - np.array([x[1] for x in self.bin_clfs[Geq(j, i)].predict_proba(X)])
 
     def predict(self, labels, X):
         """
