@@ -3,8 +3,8 @@ from itertools import combinations
 from collections import namedtuple
 from ast import literal_eval
 import numpy as np
-from PyPRSVT.preprocessing.ranking import Ranking, SpearmansRankCorrelation
 import logging
+from PyPRSVT.preprocessing.ranking import Ranking
 
 
 rpc_logger = logging.getLogger('PyPRSVT.RPC')
@@ -136,7 +136,7 @@ class RPC(object):
         y = [Ranking(literal_eval(y)) for y in y_sr.tolist()]
         correlations = []
         for rs, rt in zip(self.predict(X_df), y):
-            c = distance_metric(rs, rt)
+            c = distance_metric.compute(rs, rt)
             correlations.append(c)
         return np.mean(correlations)
 
