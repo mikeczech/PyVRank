@@ -1,8 +1,7 @@
-from PyPRSVT.ranking import rpc
+from PyPRSVT.ranking import rpc, distance_metrics
 from PyPRSVT.ranking import cross_validation as cv
 import pandas as pd
 from sklearn import svm
-from PyPRSVT.preprocessing.ranking import SpearmansRankCorrelation
 import argparse
 import logging
 
@@ -30,4 +29,4 @@ if __name__ == '__main__':
     clf.fit(X_df, y_df)
     #print(clf.predict([X_df.iloc[0].values, X_df.iloc[2].values]))
     #print(clf.predict([X_df.iloc[0].values]))
-    print(clf.score(X_df, y_df, SpearmansRankCorrelation(tools)))
+    print(clf.score(X_df, y_df, distance_metrics.SpearmansRankCorrelation(tools)))
