@@ -3,7 +3,7 @@ from itertools import combinations
 from collections import namedtuple
 from ast import literal_eval
 import numpy as np
-from PyPRSVT.preprocessing.ranking import Ranking
+from PyPRSVT.preprocessing.ranking import Ranking, SpearmansRankCorrelation
 import logging
 
 
@@ -16,6 +16,22 @@ rpc_logger.addHandler(ch)
 
 # GreaterOrEqualThan
 Geq = namedtuple('Geq', 'a b')
+
+
+class TrivialClassifier(object):
+
+    def __init__(self, classes, prediction_index):
+        self.classes = classes
+        self.prediction_index = prediction_index
+
+    def predict(self, X):
+        return [self.classes[self.prediction_index] for _ in X]
+
+    def predict_proba(self, X):
+        return [[1.0 if i == self.prediction_index else 0.0 for i, _ in enumerate(self.classes)] for _ in X]
+
+    def score(self, X, y):
+        return np.mean([1.0 if i != self.classes[self.prediction_index] else 0.0 for i in y])
 
 
 class RPC(object):
@@ -65,11 +81,26 @@ class RPC(object):
             # Solve binary ML problem with base learner
             X = rel_df.drop('y', 1).values
             y = rel_df['y'].values
-            self.bin_clfs[rel].fit(X, y)
 
-            scores = self.bin_clfs[rel].score(X, y)
-            rpc_logger.info('Accuracy on training data: {} (+/- {})'
-                            .format(scores.mean(), scores.std() * 2))
+            one_count = len([i for i in y if i == 1])
+            zero_count = len([i for i in y if i == 0])
+
+            # Todo How can we handle such problems?
+            if one_count == 0 or zero_count == 0:
+                rpc_logger.warning('''
+                Only one class in binary classification problem detected. You need better data!
+                Replacing base learner with trivial classifier...
+                (Note that this might negatively influence generalization performance!)''')
+
+            if one_count == 0:
+                self.bin_clfs[rel] = TrivialClassifier([0, 1], 0)
+            elif zero_count == 0:
+                self.bin_clfs[rel] = TrivialClassifier([0, 1], 1)
+            else:
+                self.bin_clfs[rel].fit(X, y)
+                scores = self.bin_clfs[rel].score(X, y)
+                rpc_logger.info('Accuracy on training data: {}, class imbalance: {}'
+                                .format(scores, one_count / zero_count))
 
         self.fitted = True
 
@@ -79,27 +110,34 @@ class RPC(object):
         else:
             return 1 - np.array([x[1] for x in self.bin_clfs[Geq(j, i)].predict_proba(X)])
 
-    def predict(self, X):
+    def predict(self, X_df):
         """
         Todo
         :param labels:
         :param X:
         :return:
         """
+        X = X_df.values
         # Compute scores
         scores = {}
         for l in self.labels:
             scores[l] = sum([self.__R(X, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
-        return [sorted([l for l in self.labels], key=lambda l: scores[l][i]) for i, _ in enumerate(X)]
+        return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i, _ in enumerate(X)]
 
-    def score(self, X, y):
+    def score(self, X_df, y_sr, distance_metric):
         """
-        Accuracy w.r.t. Spearman rank correlation.
-        :param X:
+        Todo
+        :param X_df:
         :param y:
         :return:
         """
-        predictions = self.predict(X)
+        y = [Ranking(literal_eval(y)) for y in y_sr.tolist()]
+        correlations = []
+        for rs, rt in zip(self.predict(X_df), y):
+            c = distance_metric(rs, rt)
+            correlations.append(c)
+        return np.mean(correlations)
+
 
