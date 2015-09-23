@@ -1,4 +1,3 @@
-import pandas as pd
 from itertools import combinations
 from collections import namedtuple
 import numpy as np

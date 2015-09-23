@@ -37,7 +37,6 @@ if __name__ == '__main__':
         with open(args.output + '.tools', 'w') as f:
             f.write(",".join(tools))
 
-
     # Write data set with verifolio features to output
     elif args.features and any([args.dir, args.fromcvs]):
         sourcefiles = []
