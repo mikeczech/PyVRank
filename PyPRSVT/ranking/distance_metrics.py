@@ -13,3 +13,8 @@ class SpearmansRankCorrelation(object):
 
     def compute(self, ranking_a, ranking_b):
         return 1 - (6 * self.__d(ranking_a, ranking_b) / (self.k * (self.k**2 - 1)))
+
+
+# Todo
+class KendallTau(object):
+    pass
