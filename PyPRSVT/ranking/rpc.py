@@ -3,6 +3,8 @@ from collections import namedtuple
 import numpy as np
 import logging
 from PyPRSVT.preprocessing.ranking import Ranking
+from sklearn.base import BaseEstimator
+import sklearn
 
 
 rpc_logger = logging.getLogger('PyPRSVT.RPC')
@@ -32,14 +34,14 @@ class TrivialClassifier(object):
         return np.mean([1.0 if i != self.classes[self.prediction_index] else 0.0 for i in y])
 
 
-class RPC(object):
+class RPC(BaseEstimator):
 
-    def __init__(self, labels, base_learner, **bl_options):
+    def __init__(self, labels, distance_metric, base_learner):
         self.base_learner = base_learner
-        self.bl_options = bl_options
         self.fitted = False
         self.bin_clfs = {}
         self.labels = labels
+        self.distance_metric = distance_metric
 
     def fit(self, X, y):
         """
@@ -51,7 +53,7 @@ class RPC(object):
         # Initialize base learners
         for (a, b) in combinations(self.labels, 2):
             self.bin_clfs[Geq(a, b)] \
-                = self.base_learner(**self.bl_options) if self.bl_options else self.base_learner()
+                = sklearn.base.clone(self.base_learner)
 
         rpc_logger.info('Decomposed label ranking problem into {} binary classification problems'
                         .format(len(self.bin_clfs.keys())))
@@ -96,7 +98,7 @@ class RPC(object):
                 rpc_logger.info('Accuracy on training data: {}, class imbalance: {}'
                                 .format(scores, one_count / zero_count))
 
-        self.fitted = True
+        return self
 
     def __R(self, X, i, j):
         if Geq(i, j) in self.bin_clfs.keys():
@@ -119,7 +121,7 @@ class RPC(object):
         # Build rankings from scores
         return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i, _ in enumerate(X)]
 
-    def score(self, X, y, distance_metric):
+    def score(self, X, y):
         """
         Todo
         :param X_df:
@@ -128,7 +130,7 @@ class RPC(object):
         """
         correlations = []
         for rs, rt in zip(self.predict(X), y):
-            c = distance_metric.compute(rs, rt)
+            c = self.distance_metric.compute(rs, rt)
             correlations.append(c)
         return np.mean(correlations)
 
