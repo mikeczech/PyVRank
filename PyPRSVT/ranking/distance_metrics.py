@@ -2,6 +2,7 @@
 Distance Metrics
 """
 
+
 class SpearmansRankCorrelation(object):
 
     def __init__(self, labels):

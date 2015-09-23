@@ -1,7 +1,6 @@
 import pandas as pd
 from itertools import combinations
 from collections import namedtuple
-from ast import literal_eval
 import numpy as np
 import logging
 from PyPRSVT.preprocessing.ranking import Ranking
@@ -43,7 +42,7 @@ class RPC(object):
         self.bin_clfs = {}
         self.labels = labels
 
-    def fit(self, X_df, y_sr):
+    def fit(self, X, y):
         """
         Todo
         :param X:
@@ -58,33 +57,29 @@ class RPC(object):
         rpc_logger.info('Decomposed label ranking problem into {} binary classification problems'
                         .format(len(self.bin_clfs.keys())))
 
+        assert len(X) == len(y)
+
         # Create multiple binary classification problems from data
         for rel in self.bin_clfs.keys():
 
             rpc_logger.info('Solving binary classification problem for {} > {}'
                             .format(rel.a, rel.b))
 
-            y_rel_df = pd.DataFrame(columns=['y'])
-            for (p, r) in y_sr.iteritems():
-                ranking = Ranking(literal_eval(r))
+            y_rel = []
+            y_nan_indices = []
+            for i, ranking in enumerate(y):
                 if not ranking.part_of(rel.a, rel.b):
-                    y_rel_df.loc[p] = np.NaN
+                    y_nan_indices.append(i)
                 elif ranking.greater_or_equal_than(rel.a, rel.b):
-                    y_rel_df.loc[p] = 1
+                    y_rel.append(1)
                 else:
-                    y_rel_df.loc[p] = 0
+                    y_rel.append(0)
+            X_rel = np.array([x for i, x in enumerate(X) if i not in y_nan_indices])
 
-            # Only use rows where the label is not NaN
-            rel_df = pd.concat([X_df, y_rel_df], axis=1)
-            rel_df.dropna(inplace=True)
+            assert len(X_rel) == len(y_rel)
 
-            # Solve binary ML problem with base learner
-            X = rel_df.drop('y', 1).values
-            y = rel_df['y'].values
-
-            one_count = len([i for i in y if i == 1])
-            zero_count = len([i for i in y if i == 0])
-
+            one_count = len([i for i in y_rel if i == 1])
+            zero_count = len([i for i in y_rel if i == 0])
             # Todo How can we handle such problems?
             if one_count == 0 or zero_count == 0:
                 rpc_logger.warning('''
@@ -97,8 +92,8 @@ class RPC(object):
             elif zero_count == 0:
                 self.bin_clfs[rel] = TrivialClassifier([0, 1], 1)
             else:
-                self.bin_clfs[rel].fit(X, y)
-                scores = self.bin_clfs[rel].score(X, y)
+                self.bin_clfs[rel].fit(X_rel, y_rel)
+                scores = self.bin_clfs[rel].score(X_rel, y_rel)
                 rpc_logger.info('Accuracy on training data: {}, class imbalance: {}'
                                 .format(scores, one_count / zero_count))
 
@@ -110,14 +105,13 @@ class RPC(object):
         else:
             return 1 - np.array([x[1] for x in self.bin_clfs[Geq(j, i)].predict_proba(X)])
 
-    def predict(self, X_df):
+    def predict(self, X):
         """
         Todo
         :param labels:
         :param X:
         :return:
         """
-        X = X_df.values
         # Compute scores
         scores = {}
         for l in self.labels:
@@ -126,16 +120,15 @@ class RPC(object):
         # Build rankings from scores
         return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i, _ in enumerate(X)]
 
-    def score(self, X_df, y_sr, distance_metric):
+    def score(self, X, y, distance_metric):
         """
         Todo
         :param X_df:
         :param y:
         :return:
         """
-        y = [Ranking(literal_eval(y)) for y in y_sr.tolist()]
         correlations = []
-        for rs, rt in zip(self.predict(X_df), y):
+        for rs, rt in zip(self.predict(X), y):
             c = distance_metric.compute(rs, rt)
             correlations.append(c)
         return np.mean(correlations)

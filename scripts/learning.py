@@ -1,5 +1,7 @@
 from PyPRSVT.ranking import rpc, distance_metrics
 from PyPRSVT.ranking import cross_validation as cv
+from PyPRSVT.preprocessing.ranking import Ranking
+from ast import literal_eval
 import pandas as pd
 from sklearn import svm
 import argparse
@@ -18,15 +20,11 @@ if __name__ == '__main__':
         with open(o + '.tools') as f:
             tools |= set(f.readline().split(','))
 
-
     # Prepare data for RPC algorithm
     df = pd.concat([features_df, observations_df], axis=1)
     df.dropna(inplace=True)
     clf = rpc.RPC(tools, svm.SVC, C=1, probability=True, kernel='rbf')
-    X_df = df.drop('ranking', 1)
-    y_df = df['ranking']
-    # scores = cv.cross_val_score(clf, X_df, y_df, cv=5)
-    clf.fit(X_df, y_df)
-    #print(clf.predict([X_df.iloc[0].values, X_df.iloc[2].values]))
-    #print(clf.predict([X_df.iloc[0].values]))
-    print(clf.score(X_df, y_df, distance_metrics.SpearmansRankCorrelation(tools)))
+    X = df.drop('ranking', 1).values
+    y = [Ranking(literal_eval(r)) for r in df['ranking'].tolist()]
+    clf.fit(X, y)
+    print(clf.score(X, y, distance_metrics.SpearmansRankCorrelation(tools)))
