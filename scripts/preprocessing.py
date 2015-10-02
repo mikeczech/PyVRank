@@ -5,6 +5,7 @@ import argparse
 import pandas as pd
 import os
 from os.path import join, isfile
+import subprocess
 
 
 def c_or_i(f):
@@ -16,12 +17,14 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--category', type=str, nargs='+', required=False)
     parser.add_argument('-o', '--output', type=str, required=True)
     parser.add_argument('-d', '--dir', type=str, required=False)
+    parser.add_argument('--cpachecker', type=str, required=False)
     parser.add_argument('-R', '--recursive', action='store_true', required=False)
     parser.add_argument('--fromcsv', nargs='+', required=False)
     parser.add_argument('--preferences', action='store_true', required=False)
     parser.add_argument('--features', action='store_true', required=False)
+    parser.add_argument('--graphgen', action='store_true', required=False)
     args = parser.parse_args()
-    if not any([args.preferences, args.features]):
+    if not any([args.preferences, args.features, args.graphgen]):
         parser.print_usage()
         quit()
 
@@ -55,6 +58,12 @@ if __name__ == '__main__':
                                 if isfile(join(args.dir, f)) and c_or_i(f)])
         ret = vf.create_feature_df(set(sourcefiles))
         ret.to_csv(args.output)
+
+    elif all([args.graphgen, args.dir, args.cpachecker]):
+        for f in os.listdir(args.dir):
+            full_path = join(args.dir, f)
+            if isfile(full_path) and f.endswith('.i'):
+                subprocess.call([args.cpachecker, "-cfalabelsAnalysis", full_path])
 
     # Wrong arguments, therefore print usage
     else:
