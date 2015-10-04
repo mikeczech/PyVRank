@@ -68,7 +68,6 @@ class GK_WL(object):
                 phi[label_lookup[l], i] += 1
 
         k += np.dot(phi.transpose(), phi)
-        print(k)
 
         for it in range(1, h+1):
             # Todo check if the shape fits in all cases
@@ -85,10 +84,6 @@ class GK_WL(object):
                     edge_labels[it][i][e] = long_label
                     phi[label_lookup[long_label], i] += 1
                 GK_WL.__graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))
-
-            print(phi)
-            print(label_lookup)
-            print(np.dot(phi.transpose(), phi))
 
             k += np.dot(phi.transpose(), phi)
 
