@@ -1,11 +1,11 @@
 from PyPRSVT.preprocessing.competition import svcomp15
 from PyPRSVT.preprocessing import ranking
 from PyPRSVT.preprocessing.verifolio import features as vf
+from PyPRSVT.preprocessing.cfa.generation import LabeledDiGraphGen
 import argparse
 import pandas as pd
 import os
 from os.path import join, isfile
-import subprocess
 
 
 def c_or_i(f):
@@ -59,8 +59,15 @@ if __name__ == '__main__':
         ret = vf.create_feature_df(set(sourcefiles))
         ret.to_csv(args.output)
 
-    elif all([args.graphgen, args.dir, args.cpachecker]):
-        pass
+    elif all([args.graphgen, args.fromcsv, args.dir, args.cpachecker, args.output]):
+        sourcefiles = []
+        for csv in args.fromcsv:
+            df = pd.DataFrame.from_csv(csv)
+            for (index, _) in df.iterrows():
+                sourcefiles.append(index)
+        graphgen = LabeledDiGraphGen(args.cpachecker)
+        ret = graphgen.create_digraph_df(sourcefiles, args.dir)
+        ret.to_csv(args.output)
 
     # Wrong arguments, therefore print usage
     else:
