@@ -38,7 +38,6 @@ def compare_list(graph_list, h=1):
     :param h:
     :return: similarity matrix of all the graphs in graph_list
     """
-    k = [0] * (h+1)
     all_graphs_number_of_edges = 0
     all_graphs_max_number_of_edges = 0
     edge_neighbors = [0] * len(graph_list)
@@ -67,7 +66,7 @@ def compare_list(graph_list, h=1):
                 label_counter += 1
             phi[label_lookup[l], i] += 1
 
-    k += np.dot(phi.transpose(), phi)
+    k = np.dot(phi.transpose(), phi)
 
     for it in range(1, h+1):
         # Todo check if the shape fits in all cases
