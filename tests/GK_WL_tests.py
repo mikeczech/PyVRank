@@ -15,6 +15,7 @@ def compare_digraphs_test():
     g2.add_edge(2, 4, label='G')
 
     gk = GK_WL()
+    print(gk.compare_list([g1, g2], 1))
     print(gk.compare_list_normalized([g1, g2], 1))
 
 

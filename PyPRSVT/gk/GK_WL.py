@@ -10,6 +10,13 @@ class GK_WL(object):
         src_node, _ = edge
         return graph.in_edges(nbunch=src_node)
 
+    @staticmethod
+    def __graph_to_dot(graph, edge_graph_labels, dot_file):
+        g_copy = graph.copy()
+        nx.set_edge_attributes(g_copy, 'label', edge_graph_labels)
+        nx.write_dot(g_copy, dot_file)
+
+
     def compare_list_normalized(self, graph_list, h):
         """
         Normalized kernel
@@ -35,15 +42,18 @@ class GK_WL(object):
         all_graphs_number_of_edges = 0
         all_graphs_max_number_of_edges = 0
         edge_neighbors = [0] * len(graph_list)
-        edge_labels = [0] * len(graph_list)
+        edge_labels = [0] * (h+1)
+
+        for it in range(h+1):
+            edge_labels[it] = [0] * len(graph_list)
 
         for i, g in enumerate(graph_list):
             edge_neighbors[i] = {e: GK_WL.__edge_neighbors(e, g) for e in g.edges_iter()}
-            edge_labels[i] = nx.get_edge_attributes(g, 'label')
+            edge_labels[0][i] = nx.get_edge_attributes(g, 'label')
             all_graphs_number_of_edges += nx.number_of_edges(g)
             if nx.number_of_edges(g) > all_graphs_max_number_of_edges:
                 all_graphs_max_number_of_edges = nx.number_of_edges(g)
-            nx.write_dot(g, "graph{}.dot".format(i))
+            GK_WL.__graph_to_dot(g, edge_labels[0][i], "graph{}.dot".format(i))
         phi = np.zeros((all_graphs_number_of_edges, len(graph_list)), dtype=np.uint64)
 
         label_lookup = {}
@@ -51,7 +61,7 @@ class GK_WL(object):
 
         for i, g in enumerate(graph_list):
             for e in g.edges_iter():
-                l = edge_labels[i][e]
+                l = edge_labels[0][i][e]
                 if l not in label_lookup:
                     label_lookup[l] = label_counter
                     label_counter += 1
@@ -60,25 +70,21 @@ class GK_WL(object):
         k += np.dot(phi.transpose(), phi)
         print(k)
 
-        for it in range(h):
-
+        for it in range(1, h+1):
             # Todo check if the shape fits in all cases
             phi = np.zeros((2*all_graphs_number_of_edges, len(graph_list)))
 
             for i, g in enumerate(graph_list):
+                edge_labels[it][i] = nx.get_edge_attributes(g, 'label')
                 for e in g.edges_iter():
-                    nbh = edge_neighbors[i][e]
-                    if nbh:
-                        long_label = "_".join(np.concatenate([np.sort([edge_labels[i][nb] for nb in edge_neighbors[i][e]]),
-                                                             np.array([edge_labels[i][e]])]))
-                        if long_label not in label_lookup:
-                            label_lookup[long_label] = label_counter
-                            label_counter += 1
-                        nx.set_edge_attributes(g, 'label', {e: long_label})
-                        phi[label_lookup[long_label], i] += 1
-                    else:
-                        phi[label_lookup[edge_labels[i][e]], i] += 1
-                nx.write_dot(g, "graph{}_it{}.dot".format(i, it))
+                    long_label = "_".join(np.concatenate([np.sort([edge_labels[it-1][i][nb] for nb in edge_neighbors[i][e]]),
+                                                         np.array([edge_labels[it-1][i][e]])]))
+                    if long_label not in label_lookup:
+                        label_lookup[long_label] = label_counter
+                        label_counter += 1
+                    edge_labels[it][i][e] = long_label
+                    phi[label_lookup[long_label], i] += 1
+                GK_WL.__graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))
 
             print(phi)
             print(label_lookup)
