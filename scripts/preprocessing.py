@@ -60,6 +60,7 @@ if __name__ == '__main__':
         ret.to_csv(args.output)
 
     elif all([args.graphgen, args.dir, args.cpachecker]):
+        pass
 
     # Wrong arguments, therefore print usage
     else:
