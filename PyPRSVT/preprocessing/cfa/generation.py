@@ -64,5 +64,5 @@ class LabeledDiGraphGen(object):
             nx.set_edge_attributes(nx_digraph, 'label', relabeling)
             dot_path = join(dest_dir_path, basename(source_path) + '.dot')
             nx.write_dot(dot_path)
-            data.apend(dot_path)
+            data.append(dot_path)
         return pd.DataFrame(data, index=source_path_list)
