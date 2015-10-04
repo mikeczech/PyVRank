@@ -7,7 +7,8 @@ import networkx as nx
 
 def _edge_neighbors(edge, graph):
     src_node, _ = edge
-    return graph.in_edges(nbunch=src_node)
+    edges = graph.in_edges(nbunch=src_node)
+    return [(e[0], e[1], '0') for e in edges]
 
 
 def _graph_to_dot(graph, edge_graph_labels, dot_file):
@@ -59,7 +60,8 @@ def compare_list(graph_list, h=1):
     label_counter = 0
 
     for i, g in enumerate(graph_list):
-        for e in g.edges_iter():
+        for edge in g.edges_iter():
+            e = (edge[0], edge[1], '0')
             l = edge_labels[0][i][e]
             if l not in label_lookup:
                 label_lookup[l] = label_counter
@@ -74,8 +76,9 @@ def compare_list(graph_list, h=1):
 
         for i, g in enumerate(graph_list):
             edge_labels[it][i] = nx.get_edge_attributes(g, 'label')
-            for e in g.edges_iter():
-                long_label = "_".join(np.concatenate([np.sort([edge_labels[it-1][i][nb] for nb in edge_neighbors[i][e]]),
+            for edge in g.edges_iter():
+                e = (edge[0], edge[1], '0')
+                long_label = "_".join(np.concatenate([np.sort([edge_labels[it-1][i][nb] for nb in edge_neighbors[i][edge]]),
                                                      np.array([edge_labels[it-1][i][e]])]))
                 if long_label not in label_lookup:
                     label_lookup[long_label] = label_counter
