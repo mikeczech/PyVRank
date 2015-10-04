@@ -59,7 +59,7 @@ class LabeledDiGraphGen(object):
         for source_path in source_path_list:
             cfa_path, reached_path = self._run_cpachecker(abspath(source_path))
             nx_digraph = nx.read_dot(cfa_path)
-            relabeling = DiGraphGen._read_relabeling(reached_path)
+            relabeling = LabeledDiGraphGen._read_relabeling(reached_path)
             # Relabel graph
             nx.set_edge_attributes(nx_digraph, 'label', relabeling)
             dot_path = join(dest_dir_path, basename(source_path) + '.dot')

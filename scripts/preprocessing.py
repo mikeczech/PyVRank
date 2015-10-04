@@ -60,10 +60,6 @@ if __name__ == '__main__':
         ret.to_csv(args.output)
 
     elif all([args.graphgen, args.dir, args.cpachecker]):
-        for f in os.listdir(args.dir):
-            full_path = join(args.dir, f)
-            if isfile(full_path) and f.endswith('.i'):
-                subprocess.call([args.cpachecker, "-cfalabelsAnalysis", full_path])
 
     # Wrong arguments, therefore print usage
     else:
