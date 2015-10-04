@@ -1,5 +1,5 @@
 import networkx as nx
-from PyPRSVT.gk.GK_WL import GK_WL
+from PyPRSVT.gk import GK_WL
 
 def compare_digraphs_test():
     g1 = nx.DiGraph()
@@ -14,9 +14,8 @@ def compare_digraphs_test():
     g2.add_edge(2, 3, label='E')
     g2.add_edge(2, 4, label='G')
 
-    gk = GK_WL()
-    print(gk.compare_list([g1, g2], 1))
-    print(gk.compare_list_normalized([g1, g2], 1))
+    print(GK_WL.compare_list([g1, g2], 1))
+    print(GK_WL.compare_list_normalized([g1, g2], 1))
 
 
 
