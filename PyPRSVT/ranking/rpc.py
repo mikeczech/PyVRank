@@ -75,7 +75,12 @@ class RPC(BaseEstimator):
                     y_rel.append(1)
                 else:
                     y_rel.append(0)
-            X_rel = np.array([x for i, x in enumerate(X) if i not in y_nan_indices])
+
+            if self.base_learner.get_params()['kernel'] == 'precomputed':
+                X_rel = np.delete(X, y_nan_indices, 1)
+                X_rel = np.delete(X_rel, y_nan_indices, 0)
+            else:
+                X_rel = np.array([x for i, x in enumerate(X) if i not in y_nan_indices])
 
             assert len(X_rel) == len(y_rel)
 

@@ -53,7 +53,7 @@ def compare_list(graph_list, h=1):
         all_graphs_number_of_edges += nx.number_of_edges(g)
         if nx.number_of_edges(g) > all_graphs_max_number_of_edges:
             all_graphs_max_number_of_edges = nx.number_of_edges(g)
-        _graph_to_dot(g, edge_labels[0][i], "graph{}.dot".format(i))
+        # _graph_to_dot(g, edge_labels[0][i], "graph{}.dot".format(i))
     phi = np.zeros((all_graphs_number_of_edges, len(graph_list)), dtype=np.uint64)
 
     label_lookup = {}
@@ -85,7 +85,7 @@ def compare_list(graph_list, h=1):
                     label_counter += 1
                 edge_labels[it][i][e] = long_label
                 phi[label_lookup[long_label], i] += 1
-            _graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))
+            # _graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))
 
         k += np.dot(phi.transpose(), phi)
 
