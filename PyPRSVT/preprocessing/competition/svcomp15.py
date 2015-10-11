@@ -128,7 +128,7 @@ def _extract_expected_status(vtask_path):
 
              Otherwise the result is None.
     """
-    match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_]+)\.(i|c)',
+    match = re.match(r'[-a-zA-Z0-9_\.]+_(true|false)-([-a-zA-Z0-9_\.]+)\.(i|c)',
                      os.path.basename(vtask_path))
     if match is not None:
         return _match_status_str(match.group(1))

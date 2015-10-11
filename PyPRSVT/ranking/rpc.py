@@ -136,6 +136,8 @@ class RPC(BaseEstimator):
         correlations = []
         for rs, rt in zip(self.predict(X), y):
             c = self.distance_metric.compute(rs, rt)
+            print("RS: " + str(rs))
+            print("RT: " + str(rt))
             correlations.append(c)
         return np.mean(correlations)
 

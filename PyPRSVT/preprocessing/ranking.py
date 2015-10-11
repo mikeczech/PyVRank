@@ -33,8 +33,8 @@ def create_benchmark_ranking_df(results, compare_results):
     df = pd.concat(results, axis=1)
     # rows with na values give us not information, so drop them.
     df.dropna(inplace=True)
-    ret_df = pd.DataFrame(columns=['ranking'])
-    ret_df.index.name = 'sourcefile'
+    ranking_df = pd.DataFrame(columns=['ranking', 'property_type'])
+    ranking_df.index.name = 'sourcefile'
     tools = results.keys()
 
     # Compute rankings from results
@@ -47,6 +47,7 @@ def create_benchmark_ranking_df(results, compare_results):
                     if c >= 0:
                         geq_count[t] += 1
         ranking = sorted([t for t in tools], key=lambda t: geq_count[t])
-        ret_df.set_value(sourcefile, 'ranking', ranking)
+        ranking_df.set_value(sourcefile, 'ranking', ranking)
+        ranking_df.set_value(sourcefile, 'property_type', results_df[t]['property_type'])
 
-    return ret_df, tools
+    return ranking_df, tools

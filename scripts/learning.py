@@ -1,13 +1,34 @@
 from PyPRSVT.ranking import rpc, distance_metrics
 from PyPRSVT.preprocessing.ranking import Ranking
-import PyPRSVT.gk.GK_WL as gk
 from ast import literal_eval
 import pandas as pd
 from sklearn import svm, cross_validation
 import argparse
 import numpy as np
 import networkx as nx
+import random
 import logging
+
+
+def k_fold_cv(gram_matrix, labels, tools, folds=2, shuffle=True):
+    """
+    K-fold cross-validation
+    """
+    scores = []
+    loo = cross_validation.KFold(len(labels), folds, shuffle=shuffle, random_state=random.randint(0,100))
+    spearman = distance_metrics.SpearmansRankCorrelation(tools)
+    for train_index, test_index in loo:
+        X_train, X_test = gram_matrix[train_index][:,train_index], gram_matrix[test_index][:, train_index]
+        y_train, y_test = labels[train_index], labels[test_index]
+        clf = rpc.RPC(tools, spearman, svm.SVC(C=1000, probability=True, kernel='precomputed'))
+        clf.fit(X_train, y_train)
+        score = clf.score(X_test, y_test)
+        scores.append(score)
+
+    print("Mean accuracy: %f" %(np.mean(scores)))
+    print("Stdv: %f" %(np.std(scores)))
+
+    return scores
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Label Ranking')
@@ -32,19 +53,7 @@ if __name__ == '__main__':
 
         X = df_shuffled.drop('ranking', 1).values
         y = [Ranking(literal_eval(r)) for r in df_shuffled['ranking'].tolist()]
-        spearman = distance_metrics.SpearmansRankCorrelation(tools)
 
-        # Train, Test Split
-        # X_train, X_test, y_train, y_test = cross_validation.train_test_split(
-        #     X, y, test_size=0.4, random_state=0)
-        # clf = rpc.RPC(tools, spearman, svm.SVC(C=1, probability=True, kernel='rbf')).fit(X_train, y_train)
-        clf = rpc.RPC(tools, spearman, svm.SVC(C=10000, probability=True, kernel='rbf')).fit(X, y)
-        # print("Accuracy: %0.2f" % clf.score(X_test, y_test))
-        print("Accuracy: %0.2f" % clf.score(X, y))
-
-        # Cross Validation
-        # scores = cross_validation.cross_val_score(clf, X, y, cv=5)
-        # print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
     if args.graphs:
         observations_df = pd.concat([pd.DataFrame.from_csv(o) for o in args.observations])
@@ -60,7 +69,7 @@ if __name__ == '__main__':
         # df_shuffled = df.iloc[np.random.permutation(len(df))]
         df_shuffled = df
 
-        y = [Ranking(literal_eval(r)) for r in df_shuffled['ranking'].tolist()]
+        y = np.array([Ranking(literal_eval(r)) for r in df_shuffled['ranking'].tolist()])
         spearman = distance_metrics.SpearmansRankCorrelation(tools)
 
         graph_list = []
@@ -69,10 +78,8 @@ if __name__ == '__main__':
             nx_digraph = nx.read_dot(row.iloc[0])
             graph_list.append(nx_digraph)
         print(len(graph_list))
-        X = gk.compare_list_normalized(graph_list, h=6)
-
-        clf = rpc.RPC(tools, spearman, svm.SVC(C=10000, probability=True, kernel='precomputed')).fit(X, y)
-        print(clf.score(X, y))
+        X = gk.compare_list_normalized(graph_list, h=2)
+        k_fold_cv(X, y, tools)
 
 
 
