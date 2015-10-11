@@ -68,6 +68,7 @@ class LabeledDiGraphGen(object):
             relabeling = LabeledDiGraphGen._read_relabeling(reached_path)
             # Relabel graph
             nx.set_edge_attributes(nx_digraph, 'label', relabeling)
+            assert not isfile(dot_path)
             nx.write_dot(nx_digraph, dot_path)
             data.append(dot_path)
         return pd.DataFrame(data, index=source_path_list)
