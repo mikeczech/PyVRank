@@ -25,7 +25,12 @@ class LabeledDiGraphGen(object):
             raise ValueError('CPAChecker directory not found')
         if not (isfile(path_to_source) and path_to_source.endswith('.i')):
             raise ValueError('path_to_source is no valid filepath')
-        subprocess.call([cpash_path, '-cfalabelsAnalysis', path_to_source, '-outputpath', output_path])
+        out = subprocess.check_output([cpash_path, '-cfalabelsAnalysis', path_to_source, '-outputpath', output_path])
+        match_vresult = re.search(r'Verification\sresult:\s([A-Z]+)\.', str(out))
+        if match_vresult is None:
+            raise ValueError('Invalid output of CPAChecker.')
+        if match_vresult.group(1) != 'TRUE':
+            raise ValueError('CFALabels Analysis failed:' + out)
         assert isfile(cfa_path) and isfile(reached_path), 'Invalid output of CPAChecker'
         return cfa_path, reached_path
 

@@ -53,6 +53,7 @@ if __name__ == '__main__':
 
     elif all([args.cfg, args.csv, args.category, args.dir, args.cpachecker, args.output]):
         for c in args.category:
+            print('Processing category ' + c)
             source_files = []
             df = pd.DataFrame.from_csv(args.csv + '.' + c + '.csv')
             for (index, _) in df.iterrows():
