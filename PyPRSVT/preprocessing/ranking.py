@@ -22,7 +22,7 @@ class Ranking(object):
         return self.ranking.__str__()
 
 
-def create_benchmark_ranking_df(results, compare_results):
+def create_ranking_df(results, compare_results):
     """
     Todo
     :param results:
