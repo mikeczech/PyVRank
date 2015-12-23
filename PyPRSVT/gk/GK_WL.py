@@ -29,7 +29,8 @@ class GK_WL(object):
                     ret.append(self._compress(long_edge_label))
         return ret
 
-    def _graph_to_dot(self, graph, edge_graph_labels, dot_file):
+    @staticmethod
+    def _graph_to_dot(graph, edge_graph_labels, dot_file):
         g_copy = graph.copy()
         nx.set_edge_attributes(g_copy, 'label', edge_graph_labels)
         nx.write_dot(g_copy, dot_file)
