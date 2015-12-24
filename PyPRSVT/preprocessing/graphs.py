@@ -121,4 +121,4 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         nx.write_graphml(nx_digraph, ret_path)
         data.append(ret_path)
 
-    return pd.DataFrame(data, index=vtask_paths)
+    return pd.DataFrame({'graph_representation': data}, index=vtask_paths)

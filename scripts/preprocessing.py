@@ -21,7 +21,9 @@ def extract_graph_df(xml_dir, category, graphs_dir_out):
         if not os.path.exists(graphs_dir_out):
             os.makedirs(graphs_dir_out)
         graph_df = graphs.create_graph_df(verification_tasks, graphs_dir_out)
-        return pd.concat([ranking_df, graph_df], axis=1)
+        ret_df = pd.concat([ranking_df, graph_df], axis=1)
+        ret_df.dropna(inplace=True)
+        return ret_df, tools
 
 
 if __name__ == '__main__':
@@ -32,8 +34,11 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--df_out', type=str, required=True)
     args = parser.parse_args()
     if all([args.graphs, args.graphs_dir_out]):
-        df = extract_graph_df(args.graphs, args.category, args.graphs_dir_out)
+        df, tools = extract_graph_df(args.graphs, args.category, args.graphs_dir_out)
         df.to_csv(args.df_out)
+        with open(args.df_out + '.tools', 'w') as f:
+            f.write(",".join(tools))
+
     else:
         parser.print_usage()
         quit()

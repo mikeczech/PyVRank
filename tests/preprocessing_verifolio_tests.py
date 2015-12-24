@@ -1,6 +1,6 @@
+from PyPRSVT.preprocessing import ranking, svcomp15
+from PyPRSVT.preprocessing.unused import regression, classification
 from PyPRSVT.preprocessing.verifolio import features as f
-from PyPRSVT.preprocessing.competition import svcomp15
-from PyPRSVT.preprocessing import ranking, regression, classification
 
 
 def verifolio_feature_extraction_test():
@@ -14,7 +14,7 @@ def create_features_labels_df_test():
     sourcefiles = {i for k in cr.keys() for i in cr[k].index}
     features_df = f.create_feature_df(sourcefiles)
     # RPC dataset
-    ranking_df = ranking.create_benchmark_ranking_df(cr, svcomp15.compare_results)
+    ranking_df = ranking.create_ranking_df(cr, svcomp15.compare_results)
     features_ranking_df = f.create_features_labels_df(features_df, ranking_df)
 
     # Learning via Utility Functions datasets

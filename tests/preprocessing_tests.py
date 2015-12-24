@@ -1,8 +1,8 @@
 import nose.tools as nt
 import pandas as pd
 
-from PyPRSVT.preprocessing.competition import svcomp15
-from PyPRSVT.preprocessing import regression, ranking, classification, utils
+from PyPRSVT.preprocessing import ranking, utils, svcomp15
+from PyPRSVT.preprocessing.unused import regression, classification
 
 
 def read_results_values_test():
@@ -53,7 +53,7 @@ def witnesscheck_test():
 
 def create_benchmark_ranking_df_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = ranking.create_benchmark_ranking_df(category_results, svcomp15.compare_results)
+    df = ranking.create_ranking_df(category_results, svcomp15.compare_results)
     df.to_csv('ranking_df.csv')
     # Todo
 
