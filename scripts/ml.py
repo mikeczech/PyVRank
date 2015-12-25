@@ -15,25 +15,6 @@ import itertools
 import math
 
 
-def k_fold_cv_gram(gram_matrix, y, tools, folds=10, shuffle=True):
-    """
-    K-fold cross-validation
-    """
-    scores = []
-    loo = cross_validation.KFold(len(y), folds, shuffle=shuffle, random_state=random.randint(0, 100))
-    spearman = distance_metrics.SpearmansRankCorrelation(tools)
-    for train_index, test_index in loo:
-        X_train, X_test = gram_matrix[train_index][:,train_index], gram_matrix[test_index][:, train_index]
-        y_train, y_test = y[train_index], y[test_index]
-        clf = rpc.RPC(tools, spearman, svm.SVC(C=1000, probability=True, kernel='precomputed'))
-        clf.fit(X_train, y_train)
-        score = clf.score(X_test, y_test)
-        scores.append(score)
-    print("Mean accuracy: %f" %(np.mean(scores)))
-    print("Stdv: %f" %(np.std(scores)))
-    return np.mean(scores), np.std(scores)
-
-
 def precompute_gram(graph_paths, types, h, D):
     graphs = []
     for path in graph_paths:
@@ -65,22 +46,17 @@ def read_data(path):
     return df, tools
 
 
-def start_experiments(gram_paths, df, tools, h_set, D_set):
-    results_mean = {}
-    results_std = {}
-    min_mean = math.inf
-    best_params = None
-    for h, D in itertools.product(h_set, D_set):
-        # Perform cross-validation with h and D
-        K = np.load(gram_paths[h, D])
-        y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
-        mean, std = k_fold_cv_gram(K, y, tools)
-        if mean < min_mean:
-            min_mean = mean
-            best_params = (h, D)
-        results_mean[h, D] = mean
-        results_std[h, D] = std
-    return results_mean, results_std, min_mean, best_params
+def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
+    spearman = distance_metrics.SpearmansRankCorrelation(tools)
+    scores = []
+    loo = cross_validation.KFold(len(y), folds, shuffle=True, random_state=random.randint(0, 100))
+    for train_index, test_index in loo:
+        y_train, y_test = y[train_index], y[test_index]
+        clf = rpc.RPC(tools, spearman)
+        clf.fit(h_set, D_set, [1, 100, 1000], gram_paths, train_index, y_train)
+        score = clf.score(gram_paths, test_index, y_test)
+        scores.append(score)
+    return np.mean(scores), np.std(scores)
 
 
 def dump_latex(results_mean, results_std, h_set, D_set, best_params):
@@ -123,7 +99,8 @@ if __name__ == '__main__':
                     h, D, path = m.group(1), m.group(2), m.group(3)
                     gram_paths[h, D] = path
         df, tools = read_data(args.experiments)
-        result = start_experiments(gram_paths, df, tools. args.h_set, args.D_set)
+        y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
+        result = start_experiments(gram_paths, y, tools. args.h_set, args.D_set)
         dump_latex(*result)
 
 

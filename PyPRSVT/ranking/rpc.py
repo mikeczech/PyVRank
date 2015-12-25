@@ -3,8 +3,10 @@ from collections import namedtuple
 import numpy as np
 import logging
 from PyPRSVT.preprocessing.ranking import Ranking
-from sklearn.base import BaseEstimator
-import sklearn
+from sklearn import cross_validation, svm
+from sklearn.grid_search import ParameterGrid
+import random
+import math
 
 
 rpc_logger = logging.getLogger('PyPRSVT.RPC')
@@ -34,107 +36,78 @@ class TrivialClassifier(object):
         return np.mean([1.0 if i != self.classes[self.prediction_index] else 0.0 for i in y])
 
 
-class RPC(BaseEstimator):
+class RPC(object):
 
-    def __init__(self, labels, distance_metric, base_learner):
-        self.base_learner = base_learner
-        self.fitted = False
+    def __init__(self, labels, distance_metric):
         self.bin_clfs = {}
+        self.params = {}
         self.labels = labels
         self.distance_metric = distance_metric
 
-    def fit(self, X, y):
+    @staticmethod
+    def _k_fold_cv_gram(gram_matrix, y, C, folds=10, shuffle=True):
         """
-        Todo
-        :param X:
-        :param y:
-        :return:
+        K-fold cross-validation
         """
+        scores = []
+        loo = cross_validation.KFold(len(y), folds, shuffle=shuffle, random_state=random.randint(0, 100))
+        for train_index, test_index in loo:
+            X_train, X_test = gram_matrix[train_index][:, train_index], gram_matrix[test_index][:, train_index]
+            y_train, y_test = y[train_index], y[test_index]
+            clf = svm.SVC(C=C, probability=True, kernel='precomputed')
+            clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test)
+            scores.append(score)
+        return clf, np.mean(scores), np.std(scores)
+
+    def gram_fit(self, h_set, D_set, C_set, gram_paths, train_index, y):
         # Initialize base learners
         for (a, b) in combinations(self.labels, 2):
-            self.bin_clfs[Geq(a, b)] \
-                = sklearn.base.clone(self.base_learner)
+            # Perform grid search to find optimal parameters for each binary classification problem
+            param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
+            min_mean = math.inf
+            for params in ParameterGrid(param_gid):
+                gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:,train_index]
+                y_bin = []
+                for i, ranking in enumerate(y):
+                    assert ranking.part_of(a, b), 'Incomplete preference information detected'
+                    if ranking.greater_or_equal_than(a, b):
+                        y_bin.append(1)
+                    else:
+                        y_bin.append(0)
+
+                clf, mean, std = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
+                if mean < min_mean:
+                    min_mean = mean
+                    self.bin_clfs[a, b] = clf
+                    self.params[a, b] = params
 
         rpc_logger.info('Decomposed label ranking problem into {} binary classification problems'
                         .format(len(self.bin_clfs.keys())))
-
-        assert len(X) == len(y)
-
-        # Create multiple binary classification problems from data
-        for rel in self.bin_clfs.keys():
-
-            rpc_logger.info('Solving binary classification problem for {} > {}'
-                            .format(rel.a, rel.b))
-
-            y_rel = []
-            y_nan_indices = []
-            for i, ranking in enumerate(y):
-                if not ranking.part_of(rel.a, rel.b):
-                    y_nan_indices.append(i)
-                elif ranking.greater_or_equal_than(rel.a, rel.b):
-                    y_rel.append(1)
-                else:
-                    y_rel.append(0)
-
-            if self.base_learner.get_params()['kernel'] == 'precomputed':
-                X_rel = np.delete(X, y_nan_indices, 1)
-                X_rel = np.delete(X_rel, y_nan_indices, 0)
-            else:
-                X_rel = np.array([x for i, x in enumerate(X) if i not in y_nan_indices])
-
-            assert len(X_rel) == len(y_rel)
-
-            one_count = len([i for i in y_rel if i == 1])
-            zero_count = len([i for i in y_rel if i == 0])
-            # Todo How can we handle such problems?
-            if one_count == 0 or zero_count == 0:
-                rpc_logger.warning('''
-                Only one class in binary classification problem detected. You need better data!
-                Replacing base learner with trivial classifier...
-                (Note that this might negatively influence generalization performance!)''')
-
-            if one_count == 0:
-                self.bin_clfs[rel] = TrivialClassifier([0, 1], 0)
-            elif zero_count == 0:
-                self.bin_clfs[rel] = TrivialClassifier([0, 1], 1)
-            else:
-                self.bin_clfs[rel].fit(X_rel, y_rel)
-                scores = self.bin_clfs[rel].score(X_rel, y_rel)
-                rpc_logger.info('Accuracy on training data: {}, class imbalance: {}'
-                                .format(scores, one_count / zero_count))
-
         return self
 
-    def __R(self, X, i, j):
-        if Geq(i, j) in self.bin_clfs.keys():
-            return np.array([x[1] for x in self.bin_clfs[Geq(i, j)].predict_proba(X)])
+    def __R(self, gram_paths, test_index, train_index, i, j):
+        if (i, j) in self.bin_clfs.keys():
+            K = np.load(gram_paths[self.params[i, j]['h'], self.params[i, j]['D']])
+            K_test = K[test_index][:, train_index]
+            return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(K_test)])
         else:
-            return 1 - np.array([x[1] for x in self.bin_clfs[Geq(j, i)].predict_proba(X)])
+            K = np.load(gram_paths[self.params[j, i]['h'], self.params[j, i]['D']])
+            K_test = K[test_index][:, train_index]
+            return 1 - np.array([x[1] for x in self.bin_clfs[j, i].predict_proba(K_test)])
 
-    def predict(self, X):
-        """
-        Todo
-        :param labels:
-        :param X:
-        :return:
-        """
+    def predict(self, gram_paths, test_index, train_index, y_test):
         # Compute scores
         scores = {}
         for l in self.labels:
-            scores[l] = sum([self.__R(X, l, ll) for ll in self.labels if ll != l])
+            scores[l] = sum([self.__R(gram_paths, test_index, train_index, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
-        return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i, _ in enumerate(X)]
+        return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i in range(len(y_test))]
 
-    def score(self, X, y):
-        """
-        Todo
-        :param X_df:
-        :param y:
-        :return:
-        """
+    def score(self, gram_paths, test_index, train_index, y_test):
         correlations = []
-        for rs, rt in zip(self.predict(X), y):
+        for rs, rt in zip(self.predict(gram_paths, test_index, train_index, y_test), y_test):
             c = self.distance_metric.compute(rs, rt)
             print("RS: " + str(rs))
             print("RT: " + str(rt))
