@@ -12,7 +12,6 @@ import networkx as nx
 import random
 import re
 import itertools
-import math
 
 
 def precompute_gram(graph_paths, types, h, D):
@@ -59,10 +58,6 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
     return np.mean(scores), np.std(scores)
 
 
-def dump_latex(results_mean, results_std, h_set, D_set, best_params):
-    pass
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Label Ranking')
     parser.add_argument('-g', '--dump_gram', type=str, required=False)
@@ -83,8 +78,7 @@ if __name__ == '__main__':
         graph_series = df['graph_representation']
         gram_paths = dump_gram(graph_series.tolist(), args.types, args.h_set, args.D_set, args.gram_dir)
         with open(join(args.gram_dir, 'all.txt', 'w')) as f:
-            for k, v in gram_paths:
-                h, D = k
+            for (h, D), v in gram_paths:
                 f.write('{},{},{}\n'.formal(h, D, v))
 
     # Perform experiments
@@ -100,9 +94,8 @@ if __name__ == '__main__':
                     gram_paths[h, D] = path
         df, tools = read_data(args.experiments)
         y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
-        result = start_experiments(gram_paths, y, tools. args.h_set, args.D_set)
-        dump_latex(*result)
-
+        mean, std = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
+        print('Mean: {}, Std: {}'.format(mean, std))
 
     # Wrong arguments, therefore print usage
     else:
