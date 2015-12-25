@@ -16,9 +16,6 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 rpc_logger.addHandler(ch)
 
-# GreaterOrEqualThan
-Geq = namedtuple('Geq', 'a b')
-
 
 class TrivialClassifier(object):
 
