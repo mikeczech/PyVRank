@@ -85,7 +85,7 @@ class GK_WL(object):
             # Todo check if the shape fits in all cases
             phi = np.zeros((2*all_graphs_number_of_nodes, len(graph_list)), dtype=np.uint64)
 
-            print('Updating node labes of graphs in iteration {}'.format(it))
+            print('Updating node lables of graphs in iteration {}'.format(it), flush=True)
 
             # for each graph update edge labels
             for i, g in tqdm(list(enumerate(graph_list))):

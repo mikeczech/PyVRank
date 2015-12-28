@@ -115,7 +115,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         raise ValueError('Invalid destination directory.')
     data = []
 
-    print('Writing graph representations of verification tasks to {}'.format(graphs_dir_out))
+    print('Writing graph representations of verification tasks to {}'.format(graphs_dir_out), flush=True)
 
     for vtask in tqdm(vtask_paths):
         ret_path = join(graphs_dir_out, basename(vtask) + '.pickle')

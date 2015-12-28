@@ -12,6 +12,7 @@ import networkx as nx
 import random
 import re
 import itertools
+import time
 
 
 def dump_gram(graph_paths, types, h_set, D_set, out_dir):
@@ -25,13 +26,19 @@ def dump_gram(graph_paths, types, h_set, D_set, out_dir):
     ret = {}
     h_D_product = list(itertools.product(h_set, D_set))
     for i, (h, D) in enumerate(h_D_product):
-        print('Computing normalized gram matrix for h={} and D={} ({} of {})'.format(h, D, i+1, len(h_D_product)))
+        output_path = join(out_dir, 'K_h_{}_D_{}.gram'.format(h, D))
+        ret[h, D] = output_path + '.npy'
+        if not isfile(output_path + '.npy'):
+            print('Computing normalized gram matrix for h={} and D={} ({} of {})'.format(h, D, i+1, len(h_D_product)), flush=True)
+        else:
+            print('{} already exists. Skipping...'.format(output_path + '.npy'))
+            continue
+        start_time = time.time()
         kernel = gk.GK_WL()
         K = kernel.compare_list_normalized(graphs, types, h, D)
+        print('--- {} seconds ---'.format(time.time() - start_time), flush=True)
         # saving matrix
-        output_path = join(out_dir, 'K_h_{}_D_{}.gram'.format(h, D))
         np.save(output_path, K)
-        ret[h, D] = output_path + '.npy'
     return ret
 
 
@@ -69,7 +76,7 @@ def main():
     # Precompute gram matrices
     if all([args.dump_gram, args.gram_dir, args.types, args.h_set, args.D_set]):
 
-        print('Write gram matrices of {} to {}.'.format(args.dump_gram, args.gram_dir))
+        print('Write gram matrices of {} to {}.'.format(args.dump_gram, args.gram_dir), flush=True)
 
         if not all([EdgeType(t) in EdgeType for t in args.types]):
             raise ValueError('Unknown edge type detected')

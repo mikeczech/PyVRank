@@ -38,7 +38,7 @@ def create_ranking_df(results, compare_results):
     ranking_df.index.name = 'sourcefile'
     tools = results.keys()
 
-    print('Create rankings from results.')
+    print('Create rankings from results.', flush=True)
 
     # Compute rankings from results
     for (sourcefile, results_df) in tqdm(list(df.iterrows())):

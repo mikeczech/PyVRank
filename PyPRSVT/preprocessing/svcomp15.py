@@ -48,7 +48,7 @@ def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
     :return: Pandas data frame
     """
 
-    print('Reading category {} from {}'.format(category, results_xml_raw_dir_path))
+    print('Reading category {} from {}'.format(category, results_xml_raw_dir_path), flush=True)
 
     pattern = re.compile(r'\w+\.[0-9-_]+\.(witnesscheck\.[0-9-_]+\.)?results\.sv-comp15\.{0}\.xml'.format(category))
     category_results = {}
