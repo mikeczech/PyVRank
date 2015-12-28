@@ -12,28 +12,29 @@ class EdgeType(Enum):
     cfe = 3
     se = 4
 
-__path_to_cpachecker__ = ""
+__path_to_cpachecker__ = "/home/mike/Documents/Repositories/cpachecker"
 
 
-def _run_cpachecker(self, path_to_source):
+def _run_cpachecker(path_to_source):
     """
     Runs a CFALabels-Analysis
     :param path_to_cpachecker:
     :param path_to_source:
     :return:
     """
-    cpash_path = join(self.path_to_cpachecker, 'scripts', 'cpa.sh')
-    output_path = join(self.path_to_cpachecker, 'output')
-    graph_path = join(self.path_to_cpachecker, 'output', 'vtask_graph.dot')
-    node_labels_path = join(self.path_to_cpachecker, 'output', 'nodes.labels')
-    edge_types_path = join(self.path_to_cpachecker, 'output', 'edge_types.labels')
-    edge_truth_path = join(self.path_to_cpachecker, 'output', 'edge_truth.labels')
-    node_depths_path = join(self.path_to_cpachecker, 'output', 'edge_depths.labels')
-    if not isdir(self.path_to_cpachecker):
+    cpash_path = join(__path_to_cpachecker__, 'scripts', 'cpa.sh')
+    output_path = join(__path_to_cpachecker__, 'output')
+    graph_path = join(__path_to_cpachecker__, 'output', 'vtask_graph.graphml')
+    node_labels_path = join(__path_to_cpachecker__, 'output', 'nodes.labels')
+    edge_types_path = join(__path_to_cpachecker__, 'output', 'edge_types.labels')
+    edge_truth_path = join(__path_to_cpachecker__, 'output', 'edge_truth.labels')
+    node_depths_path = join(__path_to_cpachecker__, 'output', 'node_depth.labels')
+    if not isdir(__path_to_cpachecker__):
         raise ValueError('CPAChecker directory not found')
     if not (isfile(path_to_source) and (path_to_source.endswith('.i') or path_to_source.endswith('.c'))):
         raise ValueError('path_to_source is no valid filepath')
-    out = subprocess.check_output([cpash_path, '-cfalabelsAnalysis', path_to_source, '-outputpath', output_path])
+    print(path_to_source)
+    out = subprocess.check_output([cpash_path, '-astcollectorAnalysis', path_to_source, '-outputpath', output_path])
     match_vresult = re.search(r'Verification\sresult:\s([A-Z]+)\.', str(out))
     if match_vresult is None:
         raise ValueError('Invalid output of CPAChecker.')
@@ -77,7 +78,7 @@ def _read_edge_labeling(labels_path):
 def _parse_edge_types(edge_types):
     types = {}
     str_to_type_map = {'DE': EdgeType.de, 'CE': EdgeType.ce, 'SE': EdgeType.se, 'CFE': EdgeType.cfe}
-    for edge, l in edge_types.iteritems():
+    for edge, l in edge_types.items():
         if l not in str_to_type_map:
             raise ValueError('Unknown edge type ' + l + '. Wrong input?')
         types[edge] = str_to_type_map[l]
@@ -97,7 +98,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         raise ValueError('Invalid destination directory.')
     data = []
     for vtask in vtask_paths:
-        ret_path = join(graphs_dir_out, basename(vtask) + '.graphml')
+        ret_path = join(graphs_dir_out, basename(vtask) + '.pickle')
 
         # DEBUG
         if isfile(ret_path):
@@ -106,7 +107,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
 
         graph_path, node_labels_path, edge_types_path, edge_truth_path, node_depths_path \
             = _run_cpachecker(abspath(vtask))
-        nx_digraph = nx.read_dot(graph_path)
+        nx_digraph = nx.read_graphml(graph_path)
         node_labels = _read_node_labeling(node_labels_path)
         nx.set_node_attributes(nx_digraph, 'label', node_labels)
         edge_types = _read_edge_labeling(edge_types_path)
@@ -118,7 +119,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         nx.set_node_attributes(nx_digraph, 'depth', node_depths)
 
         assert not isfile(ret_path)
-        nx.write_graphml(nx_digraph, ret_path)
+        nx.write_gpickle(nx_digraph, ret_path)
         data.append(ret_path)
 
     return pd.DataFrame({'graph_representation': data}, index=vtask_paths)
