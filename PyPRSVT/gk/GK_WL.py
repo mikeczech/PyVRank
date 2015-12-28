@@ -28,8 +28,9 @@ class GK_WL(object):
             source, _ = e
             edge_t = edge_types[e]
             if edge_t in types and node_depth[i][source] <= D:
-                long_edge_label = "".join(
-                        [str(t) for t in [node_labels[it][i][source], '_', edge_t.value, '_', edge_truth[e].value]])
+                long_edge_label = "_".join(
+                        [str(t) for t in [node_labels[it][i][source],
+                                          self._compress(str(edge_t)), self._compress(str(edge_truth[e]))]])
                 ret.append(self._compress(long_edge_label))
         return ret
 
@@ -85,7 +86,7 @@ class GK_WL(object):
             # Todo check if the shape fits in all cases
             phi = np.zeros((2*all_graphs_number_of_nodes, len(graph_list)), dtype=np.uint64)
 
-            print('Updating node lables of graphs in iteration {}'.format(it), flush=True)
+            print('Updating node labels of graphs in iteration {}'.format(it), flush=True)
 
             # for each graph update edge labels
             for i, g in tqdm(list(enumerate(graph_list))):
@@ -93,7 +94,7 @@ class GK_WL(object):
                 for node in g.nodes_iter():
                     if node_depth[i][node] <= D:
                         label_collection = self._collect_labels(node, i, g, it-1, node_labels, node_depth, types, D)
-                        long_label = "".join(str(x) for x in [np.concatenate([np.array([node_labels[it-1][i][node]]),
+                        long_label = "_".join(str(x) for x in [np.concatenate([np.array([node_labels[it-1][i][node]]),
                                                              np.sort(label_collection)])])
                         node_labels[it][i][node] = self._compress(long_label)
                         phi[self._compress(long_label), i] += 1

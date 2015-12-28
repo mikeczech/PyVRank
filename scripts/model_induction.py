@@ -99,8 +99,10 @@ def main():
             for l in f:
                 m = re.match(r"([0-9]+),([0-9]+),(.+)\n", l)
                 if m is not None:
-                    h, D, path = m.group(1), m.group(2), m.group(3)
+                    h, D, path = int(m.group(1)), int(m.group(2)), m.group(3)
                     gram_paths[h, D] = path
+                else:
+                    raise ValueError('Invalid all.txt file?')
         df, tools = read_data(args.experiments)
         y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
         mean, std = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
