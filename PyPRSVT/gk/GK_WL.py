@@ -22,11 +22,13 @@ class GK_WL(object):
         edge_types = nx.get_edge_attributes(graph, 'type')
         edge_truth = nx.get_edge_attributes(graph, 'truth')
         for e in graph.in_edges(nbunch=node):
-            source, _, _ = e
-            for t in edge_types[e].split(','):
-                if t in types and node_depth[source] <= D:
-                    long_edge_label = "".join([node_labels[it][i][source], t, edge_truth[e]])
-                    ret.append(self._compress(long_edge_label))
+            # todo add for multigraph
+            # source, _, _ = e
+            source, _ = e
+            edge_t = edge_types[e]
+            if edge_t in types and node_depth[source] <= D:
+                long_edge_label = "".join([node_labels[it][i][source], edge_t, edge_truth[e]])
+                ret.append(self._compress(long_edge_label))
         return ret
 
     @staticmethod
@@ -58,9 +60,10 @@ class GK_WL(object):
             node_labels[it] = [0] * len(graph_list)
 
         for i, g in enumerate(graph_list):
-            node_labels[0][i] = {(key, self._compress(value)) for key, value in nx.get_node_attributes(g, 'label').iteritems()}
-            node_depth[i] = {(key, int(value)) for key, value in nx.get_node_attributes(g, 'depth').iteritems()}
-            all_graphs_number_of_nodes += len([node for node in nx.node_iter(g) if node_depth[node] <= D])
+            node_labels[0][i] = {key: self._compress(value)
+                                 for key, value in nx.get_node_attributes(g, 'label').items()}
+            node_depth[i] = nx.get_node_attributes(g, 'depth')
+            all_graphs_number_of_nodes += len([node for node in nx.nodes_iter(g) if node_depth[i][node] <= D])
             # _graph_to_dot(g, edge_labels[0][i], "graph{}.dot".format(i))
 
         # all_graphs_number_of_nodes is upper bound for number of possible edge labels

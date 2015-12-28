@@ -12,29 +12,29 @@ import networkx as nx
 import random
 import re
 import itertools
-
-
-def precompute_gram(graph_paths, types, h, D):
-    graphs = []
-    for path in graph_paths:
-        print('Processing graph' + path)
-        if not isfile(path):
-            raise ValueError('Graph not found.')
-        g = nx.read_gpickle(path)
-        graphs.append(g)
-    kernel = gk.GK_WL()
-    K = kernel.compare_list_normalized(graphs, types, h, D)
-    return K
+from tqdm import tqdm
 
 
 def dump_gram(graph_paths, types, h_set, D_set, out_dir):
-    gram_paths = {}
-    for h, D in itertools.product(h_set, D_set):
+    print('Reading graph representations of verification tasks.')
+    graphs = []
+    for p in tqdm(graph_paths):
+        if not isfile(p):
+            raise ValueError('Graph {} not found.'.format(p))
+        g = nx.read_gpickle(p)
+        graphs.append(g)
+
+    ret = {}
+    h_D_product = list(itertools.product(h_set, D_set))
+    for i, (h, D) in enumerate(h_D_product):
+        print('Computing normalized gram matrix for h={} and D={} ({} of {})'.format(h, D, i+1, len(h_D_product)))
+        kernel = gk.GK_WL()
+        K = kernel.compare_list_normalized(graphs, types, h, D)
+        # saving matrix
         output_path = join(out_dir, 'K_h_{}_D_{}.gram'.format(h, D))
-        K = precompute_gram(graph_paths, types, h, D)
         np.save(output_path, K)
-        graph_paths[h, D] = output_path
-    return gram_paths
+        ret[h, D] = output_path
+    return ret
 
 
 def read_data(path):
@@ -58,7 +58,7 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
     return np.mean(scores), np.std(scores)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Label Ranking')
     parser.add_argument('-g', '--dump_gram', type=str, required=False)
     parser.add_argument('--gram_dir', type=str, required=False)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Precompute gram matrices
     if all([args.dump_gram, args.gram_dir, args.types, args.h_set, args.D_set]):
 
-        print('Write gram matrices of {} to {}.'.format(args.dump_gram, args.dump_gram))
+        print('Write gram matrices of {} to {}.'.format(args.dump_gram, args.gram_dir))
 
         if not all([EdgeType(t) in EdgeType for t in args.types]):
             raise ValueError('Unknown edge type detected')
@@ -79,7 +79,8 @@ if __name__ == '__main__':
             raise ValueError('Given directory does not exist')
         df, tools = read_data(args.dump_gram)
         graph_series = df['graph_representation']
-        gram_paths = dump_gram(graph_series.tolist(), args.types, args.h_set, args.D_set, args.gram_dir)
+        types = [EdgeType(t) for t in args.types]
+        gram_paths = dump_gram(graph_series.tolist(), types, args.h_set, args.D_set, args.gram_dir)
         with open(join(args.gram_dir, 'all.txt', 'w')) as f:
             for (h, D), v in gram_paths:
                 f.write('{},{},{}\n'.formal(h, D, v))
@@ -104,5 +105,9 @@ if __name__ == '__main__':
     else:
         parser.print_usage()
         quit()
+
+
+if __name__ == '__main__':
+    main()
 
 
