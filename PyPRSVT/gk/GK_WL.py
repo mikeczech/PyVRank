@@ -19,7 +19,7 @@ class GK_WL(object):
 
     def _collect_labels(self, node, i, graph, it, node_labels, node_depth, types, D):
         ret = []
-        edge_types = nx.get_edge_attributes(graph, 'types')
+        edge_types = nx.get_edge_attributes(graph, 'type')
         edge_truth = nx.get_edge_attributes(graph, 'truth')
         for e in graph.in_edges(nbunch=node):
             source, _, _ = e

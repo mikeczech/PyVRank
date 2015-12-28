@@ -134,7 +134,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
 
         edge_types = _read_edge_labeling(edge_types_path)
         parsed_edge_types = _parse_edge(edge_types)
-        nx.set_edge_attributes(nx_digraph, 'types', parsed_edge_types)
+        nx.set_edge_attributes(nx_digraph, 'type', parsed_edge_types)
 
         edge_truth = _read_edge_labeling(edge_truth_path)
         parsed_edge_truth = _parse_edge(edge_truth)
