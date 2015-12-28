@@ -17,7 +17,7 @@ class Ranking(object):
         return self.ranking.index(tool)
 
     def greater_or_equal_than(self, tool_a, tool_b):
-        return self.loc(tool_a) > self.loc(tool_b)
+        return self.loc(tool_a) >= self.loc(tool_b)
 
     def __str__(self):
         return self.ranking.__str__()

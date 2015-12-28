@@ -1,5 +1,4 @@
 from itertools import combinations
-from collections import namedtuple
 import numpy as np
 import logging
 from PyPRSVT.preprocessing.ranking import Ranking
@@ -7,6 +6,7 @@ from sklearn import cross_validation, svm
 from sklearn.grid_search import ParameterGrid
 import random
 import math
+from tqdm import tqdm
 
 
 rpc_logger = logging.getLogger('PyPRSVT.RPC')
@@ -38,6 +38,7 @@ class RPC(object):
     def __init__(self, labels, distance_metric):
         self.bin_clfs = {}
         self.params = {}
+        self.train_indices = {}
         self.labels = labels
         self.distance_metric = distance_metric
 
@@ -55,15 +56,15 @@ class RPC(object):
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test)
             scores.append(score)
-        return clf, np.mean(scores), np.std(scores)
+        return clf, np.mean(scores), np.std(scores), train_index
 
     def gram_fit(self, h_set, D_set, C_set, gram_paths, train_index, y):
         # Initialize base learners
-        for (a, b) in combinations(self.labels, 2):
+        for (a, b) in tqdm(list(combinations(self.labels, 2)), nested=True):
             # Perform grid search to find optimal parameters for each binary classification problem
             param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
             min_mean = math.inf
-            for params in ParameterGrid(param_gid):
+            for params in tqdm(list(ParameterGrid(param_gid)), nested=True):
                 gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:,train_index]
                 y_bin = []
                 for i, ranking in enumerate(y):
@@ -72,42 +73,41 @@ class RPC(object):
                         y_bin.append(1)
                     else:
                         y_bin.append(0)
+                y_bin = np.array(y_bin)
 
-                clf, mean, std = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
+                clf, mean, std, base_train_index = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
                 if mean < min_mean:
                     min_mean = mean
                     self.bin_clfs[a, b] = clf
                     self.params[a, b] = params
-
-        rpc_logger.info('Decomposed label ranking problem into {} binary classification problems'
-                        .format(len(self.bin_clfs.keys())))
+                    self.train_indices[a, b] = base_train_index
         return self
 
-    def __R(self, gram_paths, test_index, train_index, i, j):
+    def __R(self, gram_paths, test_index, i, j):
         if (i, j) in self.bin_clfs.keys():
+            base_train_index = self.train_indices[i, j]
             K = np.load(gram_paths[self.params[i, j]['h'], self.params[i, j]['D']])
-            K_test = K[test_index][:, train_index]
+            K_test = K[test_index][:, base_train_index]
             return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(K_test)])
         else:
+            base_train_index = self.train_indices[j, i]
             K = np.load(gram_paths[self.params[j, i]['h'], self.params[j, i]['D']])
-            K_test = K[test_index][:, train_index]
+            K_test = K[test_index][:, base_train_index]
             return 1 - np.array([x[1] for x in self.bin_clfs[j, i].predict_proba(K_test)])
 
-    def predict(self, gram_paths, test_index, train_index, y_test):
+    def predict(self, gram_paths, test_index, y_test):
         # Compute scores
         scores = {}
         for l in self.labels:
-            scores[l] = sum([self.__R(gram_paths, test_index, train_index, l, ll) for ll in self.labels if ll != l])
+            scores[l] = sum([self.__R(gram_paths, test_index, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
         return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i in range(len(y_test))]
 
-    def score(self, gram_paths, test_index, train_index, y_test):
+    def score(self, gram_paths, test_index, y_test):
         correlations = []
-        for rs, rt in zip(self.predict(gram_paths, test_index, train_index, y_test), y_test):
+        for rs, rt in zip(self.predict(gram_paths, test_index, y_test), y_test):
             c = self.distance_metric.compute(rs, rt)
-            print("RS: " + str(rs))
-            print("RT: " + str(rt))
             correlations.append(c)
         return np.mean(correlations)
 
