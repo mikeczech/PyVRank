@@ -20,7 +20,7 @@ def precompute_gram(graph_paths, types, h, D):
         print('Processing graph' + path)
         if not isfile(path):
             raise ValueError('Graph not found.')
-        g = nx.read_graphml(path)
+        g = nx.read_gpickle(path)
         graphs.append(g)
     kernel = gk.GK_WL()
     K = kernel.compare_list_normalized(graphs, types, h, D)
@@ -63,14 +63,17 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--dump_gram', type=str, required=False)
     parser.add_argument('--gram_dir', type=str, required=False)
     parser.add_argument('-t', '--types', type=int, nargs='+', required=False)
-    parser.add_argument('-h', '--h_set', type=int, nargs='+', required=False)
-    parser.add_argument('-D', '--D_set', type=int, nargs='+', required=False)
+    parser.add_argument('--h_set', type=int, nargs='+', required=False)
+    parser.add_argument('--D_set', type=int, nargs='+', required=False)
     parser.add_argument('-e', '--experiments', type=str, required=False)
     args = parser.parse_args()
 
     # Precompute gram matrices
     if all([args.dump_gram, args.gram_dir, args.types, args.h_set, args.D_set]):
-        if not all([t in EdgeType for t in args.types]):
+
+        print('Write gram matrices of {} to {}.'.format(args.dump_gram, args.dump_gram))
+
+        if not all([EdgeType(t) in EdgeType for t in args.types]):
             raise ValueError('Unknown edge type detected')
         if not exists(args.gram_dir):
             raise ValueError('Given directory does not exist')
