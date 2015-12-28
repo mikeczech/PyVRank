@@ -3,6 +3,7 @@ Weisfeiler Lehman graph kernel for CFGs
 """
 import numpy as np
 import networkx as nx
+from tqdm import tqdm
 
 
 class GK_WL(object):
@@ -26,8 +27,9 @@ class GK_WL(object):
             # source, _, _ = e
             source, _ = e
             edge_t = edge_types[e]
-            if edge_t in types and node_depth[source] <= D:
-                long_edge_label = "".join([node_labels[it][i][source], edge_t, edge_truth[e]])
+            if edge_t in types and node_depth[i][source] <= D:
+                long_edge_label = "".join(
+                        [str(t) for t in [node_labels[it][i][source], '_', edge_t.value, '_', edge_truth[e].value]])
                 ret.append(self._compress(long_edge_label))
         return ret
 
@@ -81,16 +83,18 @@ class GK_WL(object):
         # h > 0
         for it in range(1, h+1):
             # Todo check if the shape fits in all cases
-            phi = np.zeros((2*all_graphs_number_of_nodes, len(graph_list)))
+            phi = np.zeros((2*all_graphs_number_of_nodes, len(graph_list)), dtype=np.uint64)
+
+            print('Updating node labes of graphs in iteration {}'.format(it))
 
             # for each graph update edge labels
-            for i, g in enumerate(graph_list):
+            for i, g in tqdm(list(enumerate(graph_list))):
                 node_labels[it][i] = {}
                 for node in g.nodes_iter():
                     if node_depth[i][node] <= D:
-                        label_collection = self._collect_labels(node, i, g, it, node_labels, node_depth, types, D)
-                        long_label = "".join(np.concatenate([np.array([node_labels[it-1][i][node]]),
-                                                             np.sort(label_collection)]))
+                        label_collection = self._collect_labels(node, i, g, it-1, node_labels, node_depth, types, D)
+                        long_label = "".join(str(x) for x in [np.concatenate([np.array([node_labels[it-1][i][node]]),
+                                                             np.sort(label_collection)])])
                         node_labels[it][i][node] = self._compress(long_label)
                         phi[self._compress(long_label), i] += 1
                 # _graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))

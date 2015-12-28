@@ -12,13 +12,11 @@ import networkx as nx
 import random
 import re
 import itertools
-from tqdm import tqdm
 
 
 def dump_gram(graph_paths, types, h_set, D_set, out_dir):
-    print('Reading graph representations of verification tasks.')
     graphs = []
-    for p in tqdm(graph_paths):
+    for p in graph_paths:
         if not isfile(p):
             raise ValueError('Graph {} not found.'.format(p))
         g = nx.read_gpickle(p)
@@ -33,7 +31,7 @@ def dump_gram(graph_paths, types, h_set, D_set, out_dir):
         # saving matrix
         output_path = join(out_dir, 'K_h_{}_D_{}.gram'.format(h, D))
         np.save(output_path, K)
-        ret[h, D] = output_path
+        ret[h, D] = output_path + '.npy'
     return ret
 
 
@@ -81,12 +79,12 @@ def main():
         graph_series = df['graph_representation']
         types = [EdgeType(t) for t in args.types]
         gram_paths = dump_gram(graph_series.tolist(), types, args.h_set, args.D_set, args.gram_dir)
-        with open(join(args.gram_dir, 'all.txt', 'w')) as f:
-            for (h, D), v in gram_paths:
-                f.write('{},{},{}\n'.formal(h, D, v))
+        with open(join(args.gram_dir, 'all.txt'), 'w') as f:
+            for (h, D), v in gram_paths.items():
+                f.write('{},{},{}\n'.format(h, D, v))
 
     # Perform experiments
-    if all([args.experiments, args.gram_dir, args.h_set, args.D_set]):
+    elif all([args.experiments, args.gram_dir, args.h_set, args.D_set]):
         if not exists(args.gram_dir):
             raise ValueError('Given directory does not exist')
         gram_paths = {}
