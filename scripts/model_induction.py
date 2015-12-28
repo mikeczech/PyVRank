@@ -4,7 +4,7 @@ from PyPRSVT.preprocessing.graphs import EdgeType
 from PyPRSVT.preprocessing.ranking import Ranking
 from ast import literal_eval
 import pandas as pd
-from sklearn import svm, cross_validation
+from sklearn import cross_validation
 from os.path import isfile, join, exists
 import argparse
 import numpy as np
