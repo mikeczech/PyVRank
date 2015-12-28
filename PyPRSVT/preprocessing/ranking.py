@@ -2,6 +2,7 @@
 Python module for preprocessing software verification competition results to solve ranking problems
 """
 import pandas as pd
+from tqdm import tqdm
 
 
 class Ranking(object):
@@ -37,8 +38,10 @@ def create_ranking_df(results, compare_results):
     ranking_df.index.name = 'sourcefile'
     tools = results.keys()
 
+    print('Create rankings from results.')
+
     # Compute rankings from results
-    for (sourcefile, results_df) in df.iterrows():
+    for (sourcefile, results_df) in tqdm(list(df.iterrows())):
         geq_count = {t: 0 for t in tools}
         for t in tools:
             for tt in tools:

@@ -7,6 +7,7 @@ from enum import Enum, unique
 import re
 import os
 import pandas as pd
+from tqdm import tqdm
 
 
 @unique
@@ -46,10 +47,13 @@ def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
     :param results_xml_raw_dir_path: Path to the raw xml results from SVCOMP
     :return: Pandas data frame
     """
+
+    print('Reading category {} from {}'.format(category, results_xml_raw_dir_path))
+
     pattern = re.compile(r'\w+\.[0-9-_]+\.(witnesscheck\.[0-9-_]+\.)?results\.sv-comp15\.{0}\.xml'.format(category))
     category_results = {}
     category_witnesschecks = {}
-    for file in os.listdir(results_xml_raw_dir_path):
+    for file in tqdm(os.listdir(results_xml_raw_dir_path)):
         match = pattern.match(file)
         if match is not None:
             benchmark, df = svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file))
