@@ -51,15 +51,15 @@ def read_data(path):
     return df, tools
 
 
-def start_experiments(gram_paths, y, tools, h_set, D_set, folds=20):
+def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
     spearman = distance_metrics.SpearmansRankCorrelation(tools)
     scores = []
     loo = cross_validation.KFold(len(y), folds, shuffle=True, random_state=random.randint(0, 100))
     for train_index, test_index in tqdm(list(loo)):
         y_train, y_test = y[train_index], y[test_index]
         clf = rpc.RPC(tools, spearman)
-        clf.gram_fit(h_set, D_set, [100, 1000], gram_paths, train_index, y_train)
-        score = clf.score(gram_paths, test_index, y_test)
+        clf.gram_fit(h_set, D_set, [100, 1000, 10000], gram_paths, train_index, y_train)
+        score = clf.score(gram_paths, test_index, train_index, y_test)
         scores.append(score)
     return np.mean(scores), np.std(scores), clf.params
 
