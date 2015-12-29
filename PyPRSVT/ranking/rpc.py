@@ -57,11 +57,6 @@ class RPC(object):
             scores.append(score)
         return np.mean(scores), np.std(scores)
 
-    # @staticmethod
-    # def _evaluate_model(parameters):
-
-
-
     def gram_fit(self, h_set, D_set, C_set, gram_paths, train_index, y_train):
         # Initialize base learners
         for (a, b) in tqdm(list(combinations(self.labels, 2)), nested=True):
@@ -98,15 +93,16 @@ class RPC(object):
 
         return self
 
+    def __R_inner(self, gram_paths, test_index, train_index, i, j):
+        K = np.load(gram_paths[self.params[i, j]['h'], self.params[i, j]['D']])
+        K_test = K[test_index][:, train_index]
+        return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(K_test)])
+
     def __R(self, gram_paths, test_index, train_index, i, j):
         if (i, j) in self.bin_clfs.keys():
-            K = np.load(gram_paths[self.params[i, j]['h'], self.params[i, j]['D']])
-            K_test = K[test_index][:, train_index]
-            return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(K_test)])
+            return self.__R_inner(gram_paths, test_index, train_index, i, j)
         else:
-            K = np.load(gram_paths[self.params[j, i]['h'], self.params[j, i]['D']])
-            K_test = K[test_index][:, train_index]
-            return 1 - np.array([x[1] for x in self.bin_clfs[j, i].predict_proba(K_test)])
+            return 1 - self.__R_inner(gram_paths, test_index, train_index, j, i)
 
     def predict(self, gram_paths, test_index, train_index, y_test):
         # Compute scores
