@@ -80,12 +80,12 @@ def _read_edge_labeling(labels_path):
     labels = {}
     with open(labels_path) as f:
         for line in f:
-            m = re.match(r"([0-9]+),([0-9]+),([0-9]+)\n", line)
+            m = re.match(r"([0-9]+),([0-9]+),([0-9]+),([0-9]+)\n", line)
             if m is not None:
                 # Todo add for multigraphs
-                # edge = (m.group(1), m.group(2), 0)
-                edge = (m.group(1), m.group(2))
-                labels[edge] = m.group(3)
+                edge = (m.group(1), m.group(2), m.group(3))
+                # edge = (m.group(1), m.group(2))
+                labels[edge] = m.group(4)
     return labels
 
 

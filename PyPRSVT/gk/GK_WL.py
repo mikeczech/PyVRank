@@ -24,8 +24,8 @@ class GK_WL(object):
         edge_truth = nx.get_edge_attributes(graph, 'truth')
         for e in graph.in_edges(nbunch=node):
             # todo add for multigraph
-            # source, _, _ = e
-            source, _ = e
+            source, _, _ = e
+            # source, _ = e
             edge_t = edge_types[e]
             if edge_t in types and node_depth[i][source] <= D:
                 long_edge_label = "_".join(

@@ -111,7 +111,11 @@ class RPC(object):
             scores[l] = sum([self.__R(gram_paths, test_index, train_index, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
-        return [Ranking(sorted([l for l in self.labels], key=lambda l: scores[l][i])) for i in range(len(y_test))]
+        ret = []
+        for i in range(len(y_test)):
+            r = sorted([l for l in self.labels], key=lambda l: scores[l][i])
+            ret.append(Ranking(r))
+        return ret
 
     def score(self, gram_paths, test_index, train_index, y_test):
         correlations = []
