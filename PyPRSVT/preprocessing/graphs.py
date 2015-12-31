@@ -15,6 +15,7 @@ class EdgeType(Enum):
     se = 4
     t = 5
     f = 6
+    dummy = 7
 
 __path_to_cpachecker__ = "/home/mike/Documents/Repositories/cpachecker"
 
