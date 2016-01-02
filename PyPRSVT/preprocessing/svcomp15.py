@@ -40,7 +40,7 @@ _df_cols = ['options', 'status', 'status_msg', 'cputime', 'walltime', 'mem_usage
             'expected_status', 'property_type']
 
 
-def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
+def read_category(results_xml_raw_dir_path, category, max_size, witnesscheck = True):
     """
     Reads a directory of raw xml SVCOMP results into a data frame.
 
@@ -56,7 +56,7 @@ def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
     for file in tqdm(os.listdir(results_xml_raw_dir_path)):
         match = pattern.match(file)
         if match is not None:
-            benchmark, df = svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file))
+            benchmark, df = svcomp_xml_to_dataframe(os.path.join(results_xml_raw_dir_path, file), max_size)
             if benchmark in category_witnesschecks or benchmark in category_results:
                 raise InvalidDataException('Already added data for benchmark {0}'.format(benchmark))
             if 'witnesscheck' not in benchmark:
@@ -68,7 +68,7 @@ def read_category(results_xml_raw_dir_path, category, witnesscheck = True):
     return category_results
 
 
-def svcomp_xml_to_dataframe(xml_path):
+def svcomp_xml_to_dataframe(xml_path, max_size):
     """
     Reads raw xml SVCOMP results into a data frame.
 
@@ -82,6 +82,17 @@ def svcomp_xml_to_dataframe(xml_path):
     if hasattr(root, 'sourcefile'):
         for source_file in root.sourcefile:
             vtask_path = source_file.attrib['name']
+
+            if os.path.isfile(vtask_path):
+                # Ignore too large files
+                vtask_size_kb = os.path.getsize(vtask_path) / 1024
+                if vtask_size_kb > max_size:
+                    print('Too large file detected. Skipping file ' + vtask_path)
+                    continue
+            else:
+                print('Non existing file detected. Skipping...')
+                continue
+
             r = _columns_to_dict(source_file.column)
             df.loc[vtask_path] = [source_file.attrib['options'] if 'options' in source_file.attrib else '',
                                   _match_status_str(r['status']),

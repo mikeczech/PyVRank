@@ -1,6 +1,7 @@
 import subprocess
 from subprocess import PIPE
-from os.path import isfile, join, abspath, isdir, basename
+from os.path import isfile, join, abspath, isdir, commonprefix, dirname
+import os
 import re
 import networkx as nx
 import pandas as pd
@@ -39,7 +40,7 @@ def _run_cpachecker(path_to_source):
     if not (isfile(path_to_source) and (path_to_source.endswith('.i') or path_to_source.endswith('.c'))):
         raise ValueError('path_to_source is no valid filepath')
     try:
-        proc = subprocess.run([cpash_path, '-astcollectorAnalysis', path_to_source, '-outputpath', output_path],
+        proc = subprocess.run([cpash_path, '-graphgenAnalysis', '-skipRecursion', path_to_source, '-outputpath', output_path],
                               check=False, stdout=PIPE, stderr=PIPE)
         match_vresult = re.search(r'Verification\sresult:\s([A-Z]+)\.', str(proc.stdout))
         if match_vresult is None:
@@ -118,8 +119,15 @@ def create_graph_df(vtask_paths, graphs_dir_out):
 
     print('Writing graph representations of verification tasks to {}'.format(graphs_dir_out), flush=True)
 
+    common_prefix = commonprefix(vtask_paths)
     for vtask in tqdm(vtask_paths):
-        ret_path = join(graphs_dir_out, basename(vtask) + '.pickle')
+        short_prefix = dirname(common_prefix)
+        path = join(graphs_dir_out, vtask[len(short_prefix):][1:])
+
+        if not os.path.exists(dirname(path)):
+            os.makedirs(dirname(path))
+
+        ret_path = path + '.pickle'
 
         # DEBUG
         if isfile(ret_path):
