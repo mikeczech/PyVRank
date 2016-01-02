@@ -7,6 +7,7 @@ import networkx as nx
 import pandas as pd
 from enum import Enum
 from tqdm import tqdm
+import time
 
 
 class EdgeType(Enum):
@@ -116,6 +117,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
     if not isdir(graphs_dir_out):
         raise ValueError('Invalid destination directory.')
     data = []
+    graphgen_times = []
 
     print('Writing graph representations of verification tasks to {}'.format(graphs_dir_out), flush=True)
 
@@ -133,6 +135,8 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         if isfile(ret_path):
             data.append(ret_path)
             continue
+
+        start_time = time.time()
 
         graph_path, node_labels_path, edge_types_path, edge_truth_path, node_depths_path \
             = _run_cpachecker(abspath(vtask))
@@ -158,4 +162,7 @@ def create_graph_df(vtask_paths, graphs_dir_out):
         nx.write_gpickle(nx_digraph, ret_path)
         data.append(ret_path)
 
-    return pd.DataFrame({'graph_representation': data}, index=vtask_paths)
+        gg_time = time.time() - start_time
+        graphgen_times.append(gg_time)
+
+    return pd.DataFrame({'graph_representation': data}, index=vtask_paths), graphgen_times
