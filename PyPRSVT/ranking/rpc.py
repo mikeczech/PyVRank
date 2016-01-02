@@ -51,8 +51,15 @@ class RPC(object):
         for train_index, test_index in loo:
             X_train, X_test = gram_matrix[train_index][:, train_index], gram_matrix[test_index][:, train_index]
             y_train, y_test = y[train_index], y[test_index]
-            clf = svm.SVC(C=C, probability=True, kernel='precomputed')
-            clf.fit(X_train, y_train)
+            one_count = len([x for x in y_train if x == 1]);
+            zero_count = len([x for x in y_train if x == 0]);
+            balance = min(one_count, zero_count)/max(one_count, zero_count)
+            if balance != 0:
+                clf = svm.SVC(C=C, probability=True, kernel='precomputed')
+                clf.fit(X_train, y_train)
+            else:
+                print('Warning. Use of trivial classifier.')
+                clf = TrivialClassifier([0, 1], 1)
             score = clf.score(X_test, y_test)
             scores.append(score)
         return np.mean(scores), np.std(scores)
@@ -71,25 +78,30 @@ class RPC(object):
                     y_bin.append(0)
             y_bin = np.array(y_bin)
 
-            # one_count = len([x for x in y_bin if x == 1]);
-            # zero_count = len([x for x in y_bin if x == 0]);
-            # print('Balance {}'.format(min(one_count, zero_count)/max(one_count, zero_count)))
+            one_count = len([x for x in y_bin if x == 1]);
+            zero_count = len([x for x in y_bin if x == 0]);
+            balance = min(one_count, zero_count)/max(one_count, zero_count)
 
-            # Perform grid search to find optimal parameters for each binary classification problem
-            param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
-            min_mean = math.inf
-            for params in tqdm(list(ParameterGrid(param_gid)), nested=True):
-                gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:, train_index]
-                mean, _ = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
-                if mean < min_mean:
-                    min_mean = mean
-                    self.params[a, b] = params
+            if balance != 0:
+                # Perform grid search to find optimal parameters for each binary classification problem
+                param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
+                min_mean = math.inf
+                for params in tqdm(list(ParameterGrid(param_gid)), nested=True):
+                    gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:, train_index]
+                    mean, _ = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
+                    if mean < min_mean:
+                        min_mean = mean
+                        self.params[a, b] = params
 
-            # Use determined parameters to train base learner
-            gram_matrix_best = np.load(gram_paths[self.params[a, b]['h'], self.params[a, b]['D']])[train_index][:, train_index]
-            clf = svm.SVC(C=self.params[a, b]['C'], probability=True, kernel='precomputed')
-            clf.fit(gram_matrix_best, y_bin)
-            self.bin_clfs[a, b] = clf
+                # Use determined parameters to train base learner
+                gram_matrix_best = np.load(gram_paths[self.params[a, b]['h'], self.params[a, b]['D']])[train_index][:, train_index]
+                clf = svm.SVC(C=self.params[a, b]['C'], probability=True, kernel='precomputed')
+                clf.fit(gram_matrix_best, y_bin)
+                self.bin_clfs[a, b] = clf
+            else:
+                print('Warning. Use of trivial classifier.')
+                self.bin_clfs[a, b] = TrivialClassifier([0, 1], 1)
+                self.params[a, b] = {'h': h_set[0], 'D': D_set[0], 'C': C_set[0]}
 
         return self
 
@@ -121,6 +133,9 @@ class RPC(object):
         correlations = []
         for rs, rt in zip(self.predict(gram_paths, test_index, train_index, y_test), y_test):
             c = self.distance_metric.compute(rs, rt)
+            print('RS: ' + str(rs))
+            print('RT: ' + str(rt))
+            print(c)
             correlations.append(c)
         return np.mean(correlations)
 
