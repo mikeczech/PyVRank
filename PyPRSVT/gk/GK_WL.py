@@ -30,13 +30,17 @@ class GK_WL(object):
                 long_edge_label = "_".join(
                         [str(t) for t in [node_labels[it][i][source],
                                           self._compress(str(edge_t)), self._compress(str(edge_truth[e]))]])
+                # long_edge_label = "_".join(
+                #         [str(t) for t in [node_labels[it][i][source],
+                #                           str(edge_t), str(edge_truth[e])]])
                 ret.append(self._compress(long_edge_label))
+                # ret.append(long_edge_label)
         return ret
 
     @staticmethod
-    def _graph_to_dot(graph, edge_graph_labels, dot_file):
+    def _graph_to_dot(graph, node_graph_labels, dot_file):
         g_copy = graph.copy()
-        nx.set_edge_attributes(g_copy, 'label', edge_graph_labels)
+        nx.set_node_attributes(g_copy, 'label', {k: str(v) for k, v in node_graph_labels.items()})
         nx.write_dot(g_copy, dot_file)
 
     def compare_list_normalized(self, graph_list, types, h, D):
@@ -66,7 +70,8 @@ class GK_WL(object):
                                  for key, value in nx.get_node_attributes(g, 'label').items()}
             node_depth[i] = nx.get_node_attributes(g, 'depth')
             all_graphs_number_of_nodes += len([node for node in nx.nodes_iter(g) if node_depth[i][node] <= D])
-            # _graph_to_dot(g, edge_labels[0][i], "graph{}.dot".format(i))
+            if i == 0:
+                self._graph_to_dot(g, node_labels[0][i], "graph{}.dot".format(i))
 
         # all_graphs_number_of_nodes is upper bound for number of possible edge labels
         phi = np.zeros((all_graphs_number_of_nodes, len(graph_list)), dtype=np.uint64)
@@ -97,7 +102,10 @@ class GK_WL(object):
                                                                np.sort(label_collection)])])
                         node_labels[it][i][node] = self._compress(long_label)
                         phi[self._compress(long_label), i] += 1
-                # _graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))
+                        # node_labels[it][i][node] = long_label
+                        # phi[self._compress(long_label), i] += 1
+                # if i == 0:
+                #     self._graph_to_dot(g, node_labels[it][i], "graph{}_it{}.dot".format(i, it))
 
             K += np.dot(phi.transpose(), phi)
 
