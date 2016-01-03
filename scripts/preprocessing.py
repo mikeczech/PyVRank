@@ -80,7 +80,7 @@ def main():
         total_time = time.time() - start_time
         write_statistics(args.df_out + '.statistics', graphgen_times, total_time, all_categories_df, tools)
 
-    if all([args.hist, args.df_out]):
+    elif all([args.hist, args.df_out]):
         df = pd.DataFrame.from_csv(args.hist)
         graph_paths = df['graph_representation'].tolist()
         graph_list = []

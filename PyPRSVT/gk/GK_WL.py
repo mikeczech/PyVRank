@@ -94,7 +94,7 @@ class GK_WL(object):
                     if node_depth[i][node] <= D:
                         label_collection = self._collect_labels(node, i, g, it-1, node_labels, node_depth, types, D)
                         long_label = "_".join(str(x) for x in [np.concatenate([np.array([node_labels[it-1][i][node]]),
-                                                             np.sort(label_collection)])])
+                                                               np.sort(label_collection)])])
                         node_labels[it][i][node] = self._compress(long_label)
                         phi[self._compress(long_label), i] += 1
                 # _graph_to_dot(g, edge_labels[it][i], "graph{}_it{}.dot".format(i, it))

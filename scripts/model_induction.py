@@ -26,6 +26,7 @@ def dump_gram(graph_paths, types, h_set, D_set, out_dir):
 
     ret = {}
     h_D_product = list(itertools.product(h_set, D_set))
+    matrix_computation_times = {}
     for i, (h, D) in enumerate(h_D_product):
         output_path = join(out_dir, 'K_h_{}_D_{}.gram'.format(h, D))
         ret[h, D] = output_path + '.npy'
@@ -37,10 +38,10 @@ def dump_gram(graph_paths, types, h_set, D_set, out_dir):
         start_time = time.time()
         kernel = gk.GK_WL()
         K = kernel.compare_list_normalized(graphs, types, h, D)
-        print('--- {} seconds ---'.format(time.time() - start_time), flush=True)
+        matrix_computation_times[h, D] = time.time() - start_time
         # saving matrix
         np.save(output_path, K)
-    return ret
+    return ret, matrix_computation_times
 
 
 def read_data(path):
@@ -66,6 +67,15 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
     return np.mean(scores), np.std(scores), clf.params
 
 
+def write_statistics(file, gram_times):
+    with open(file, 'w') as f:
+        total_time = 0
+        for (h, D), t in gram_times.items():
+            f.write('h {}, D {}: {} seconds\n'.format(h, D, t))
+            total_time += t
+        f.write('Total time: {} seconds\n'.format(total_time))
+
+
 def main():
     parser = argparse.ArgumentParser(description='Label Ranking')
     parser.add_argument('-g', '--dump_gram', type=str, required=False)
@@ -88,10 +98,12 @@ def main():
         df, tools = read_data(args.dump_gram)
         graph_series = df['graph_representation']
         types = [EdgeType(t) for t in args.types]
-        gram_paths = dump_gram(graph_series.tolist(), types, args.h_set, args.D_set, args.gram_dir)
+        gram_paths, times = dump_gram(graph_series.tolist(), types, args.h_set, args.D_set, args.gram_dir)
         with open(join(args.gram_dir, 'all.txt'), 'w') as f:
             for (h, D), v in gram_paths.items():
                 f.write('{},{},{}\n'.format(h, D, v))
+        write_statistics(join(args.gram_dir, 'gram.statistics'), times)
+
 
     # Perform experiments
     elif all([args.experiments, args.gram_dir, args.h_set, args.D_set]):
