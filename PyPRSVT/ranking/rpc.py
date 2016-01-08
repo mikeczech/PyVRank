@@ -133,9 +133,9 @@ class RPC(object):
         correlations = []
         for rs, rt in zip(self.predict(gram_paths, test_index, train_index, y_test), y_test):
             c = self.distance_metric.compute(rs, rt)
-            print('RS: ' + str(rs))
-            print('RT: ' + str(rt))
-            print(c)
+            # print('RS: ' + str(rs))
+            # print('RT: ' + str(rt))
+            # print(c)
             correlations.append(c)
         return np.mean(correlations)
 

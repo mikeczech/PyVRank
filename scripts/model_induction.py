@@ -53,27 +53,54 @@ def read_data(path):
 
 
 def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
-    start_time = time.time()
+    start_total_time = time.time()
     spearman = distance_metrics.SpearmansRankCorrelation(tools)
     scores = []
+    training_times = []
+    testing_times = []
     loo = cross_validation.KFold(len(y), folds, shuffle=True, random_state=random.randint(0, 100))
     for train_index, test_index in tqdm(list(loo)):
         y_train, y_test = y[train_index], y[test_index]
         clf = rpc.RPC(tools, spearman)
-        clf.gram_fit(h_set, D_set, [100], gram_paths, train_index, y_train)
+        start_training_time = time.time()
+        clf.gram_fit(h_set, D_set, [1, 100, 1000, 10000], gram_paths, train_index, y_train)
+        training_times.append(time.time() - start_training_time)
+        start_testing_time = time.time()
         score = clf.score(gram_paths, test_index, train_index, y_test)
+        testing_times.append(time.time() - start_testing_time)
         scores.append(score)
-    print('--- {} seconds ---'.format(time.time() - start_time), flush=True)
-    return np.mean(scores), np.std(scores), clf.params
+    total_time = time.time() - start_total_time
+    return scores, clf.params, total_time, training_times, testing_times
 
 
-def write_statistics(file, gram_times):
+def write_dump_statistics(file, gram_times):
     with open(file, 'w') as f:
         total_time = 0
         for (h, D), t in gram_times.items():
             f.write('h {}, D {}: {} seconds\n'.format(h, D, t))
             total_time += t
         f.write('Total time: {} seconds\n'.format(total_time))
+
+
+def write_experiments_statistics(file, scores, total_time, final_params, training_times, testing_times):
+    with open(file, 'w') as f:
+        f.write('Accuracy: {} (Std: {})\n'.format(np.mean(scores), np.std(scores)))
+        f.write('Total time: {} seconds\n'.format(total_time))
+        f.write('Average training time: {} seconds (Std: {})\n'.format(np.mean(training_times), np.std(training_times)))
+        f.write('Average testing time: {} seconds (Std: {})\n'.format(np.mean(testing_times), np.std(testing_times)))
+        f.write('Total time: {} seconds\n'.format(total_time))
+        h_list = []
+        D_list = []
+        C_list = []
+        for (a, b), params in final_params.items():
+            f.write('{}, {}: h={}, D={}, C={}\n'.format(a, b, params['h'], params['D'], params['C']))
+            h_list.append(params['h'])
+            D_list.append(params['D'])
+            C_list.append(params['C'])
+        f.write('Average h: {} (Std: {})\n'.format(np.mean(h_list), np.std(h_list)))
+        f.write('Average D: {} (Std: {})\n'.format(np.mean(D_list), np.std(D_list)))
+        f.write('Average C: {} (Std: {})\n'.format(np.mean(C_list), np.std(C_list)))
+
 
 
 def main():
@@ -84,6 +111,7 @@ def main():
     parser.add_argument('--h_set', type=int, nargs='+', required=False)
     parser.add_argument('--D_set', type=int, nargs='+', required=False)
     parser.add_argument('-e', '--experiments', type=str, required=False)
+    parser.add_argument('-o', '--out', type=str, required=False)
     args = parser.parse_args()
 
     # Precompute gram matrices
@@ -102,11 +130,11 @@ def main():
         with open(join(args.gram_dir, 'all.txt'), 'w') as f:
             for (h, D), v in gram_paths.items():
                 f.write('{},{},{}\n'.format(h, D, v))
-        write_statistics(join(args.gram_dir, 'gram.statistics'), times)
+        write_dump_statistics(join(args.gram_dir, 'gram.statistics'), times)
 
 
     # Perform experiments
-    elif all([args.experiments, args.gram_dir, args.h_set, args.D_set]):
+    elif all([args.experiments, args.gram_dir, args.h_set, args.D_set, args.out]):
         if not exists(args.gram_dir):
             raise ValueError('Given directory does not exist')
         gram_paths = {}
@@ -120,9 +148,8 @@ def main():
                     raise ValueError('Invalid all.txt file?')
         df, tools = read_data(args.experiments)
         y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
-        mean, std, params = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
-        print('Mean: {}, Std: {}'.format(mean, std))
-        print(params)
+        scores, final_params, total_time, training_times, testing_times = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
+        write_experiments_statistics(args.out, scores, total_time, final_params, training_times, testing_times)
 
     # Wrong arguments, therefore print usage
     else:
