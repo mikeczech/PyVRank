@@ -1,7 +1,7 @@
 import argparse
 import os
 import pandas as pd
-from PyPRSVT.preprocessing import ranking, svcomp15, graphs
+from PyPRSVT.preprocessing import ranking, svcomp15, graphs, verifolio
 import time
 import numpy as np
 from PyPRSVT.ranking.distance_metrics import SpearmansRankCorrelation
@@ -17,6 +17,17 @@ def c_or_i(f):
 def extract_ranking_df(xml_dir, category, max_size):
     results = svcomp15.read_category(xml_dir, category, max_size)
     return ranking.create_ranking_df(results, svcomp15.compare_results)
+
+
+def extract_feature_df(xml_dir, category, max_size):
+    ranking_df, tools = extract_ranking_df(xml_dir, category, max_size)
+    verification_tasks = []
+    for (index, _) in ranking_df.iterrows():
+        verification_tasks.append(index)
+    feature_df = verifolio.create_feature_df(verification_tasks)
+    ret_df = pd.concat([ranking_df, feature_df], axis=1)
+    ret_df.dropna(inplace=True)
+    return ret_df, tools
 
 
 def extract_graph_df(xml_dir, category, graphs_dir_out, max_size):
@@ -52,6 +63,7 @@ def write_statistics(file, graphgen_times, total_time, all_categories_df, tools)
 def main():
     parser = argparse.ArgumentParser(description='Create RPC Input from SVCOMP data')
     parser.add_argument('--graphs', type=str, required=False)
+    parser.add_argument('--verifolio', type=str, required=False)
     parser.add_argument('-c', '--categories', nargs='+', type=str, required=False)
     parser.add_argument('-g', '--graphs_dir_out', type=str, required=False)
     parser.add_argument('-o', '--df_out', type=str, required=True)
@@ -97,6 +109,18 @@ def main():
         graphinfo.generate_edge_number_hist(graph_list, 4)
         graphinfo.generate_node_depth_hist(graph_list)
 
+    elif all([args.verifolio, args.categories, args.max_size]):
+        category_df_list = []
+        tools_set = set()
+        for category in args.categories:
+            df, tools = extract_feature_df(args.verifolio, category, args.max_size)
+            category_df_list.append(df)
+            tools_set.update(tools)
+
+        all_categories_df = pd.concat(category_df_list)
+        all_categories_df.to_csv(args.df_out)
+        with open(args.df_out + '.tools', 'w') as f:
+            f.write(",".join(tools_set))
     else:
         parser.print_usage()
         quit()

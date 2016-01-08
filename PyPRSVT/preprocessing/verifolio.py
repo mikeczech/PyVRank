@@ -1,6 +1,7 @@
 import requests
 import json
 import pandas as pd
+from tqdm import tqdm
 
 VERIFOLIO_URL = r'http://127.0.0.1:5000/extract'
 
@@ -23,8 +24,11 @@ def create_feature_df(sourcefiles):
     :param sourcefiles:
     :return:
     """
+
+    print('Extracting features...', flush=True)
+
     data = []
-    for s in sourcefiles:
+    for s in tqdm(sourcefiles):
         features = extract_features(s)
         metrics = features['loop_metrics']
         metrics.update(features['role_metrics'])
