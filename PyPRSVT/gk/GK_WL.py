@@ -70,8 +70,8 @@ class GK_WL(object):
                                  for key, value in nx.get_node_attributes(g, 'label').items()}
             node_depth[i] = nx.get_node_attributes(g, 'depth')
             all_graphs_number_of_nodes += len([node for node in nx.nodes_iter(g) if node_depth[i][node] <= D])
-            if i == 0:
-                self._graph_to_dot(g, node_labels[0][i], "graph{}.dot".format(i))
+            # if i == 0:
+            #     self._graph_to_dot(g, node_labels[0][i], "graph{}.dot".format(i))
 
         # all_graphs_number_of_nodes is upper bound for number of possible edge labels
         phi = np.zeros((all_graphs_number_of_nodes, len(graph_list)), dtype=np.uint64)

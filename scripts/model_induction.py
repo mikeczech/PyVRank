@@ -63,7 +63,7 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
         y_train, y_test = y[train_index], y[test_index]
         clf = rpc.RPC(tools, spearman)
         start_training_time = time.time()
-        clf.gram_fit(h_set, D_set, [1, 100, 1000, 10000], gram_paths, train_index, y_train)
+        clf.gram_fit(h_set, D_set, [10], gram_paths, train_index, y_train)
         training_times.append(time.time() - start_training_time)
         start_testing_time = time.time()
         score = clf.score(gram_paths, test_index, train_index, y_test)

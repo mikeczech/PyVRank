@@ -85,12 +85,12 @@ class RPC(object):
             if balance != 0:
                 # Perform grid search to find optimal parameters for each binary classification problem
                 param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
-                min_mean = math.inf
+                max_mean = -math.inf
                 for params in tqdm(list(ParameterGrid(param_gid)), nested=True):
                     gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:, train_index]
                     mean, _ = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
-                    if mean < min_mean:
-                        min_mean = mean
+                    if mean > max_mean:
+                        max_mean = mean
                         self.params[a, b] = params
 
                 # Use determined parameters to train base learner
