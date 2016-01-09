@@ -64,6 +64,7 @@ class RPC(object):
             scores.append(score)
         return np.mean(scores), np.std(scores)
 
+
     def gram_fit(self, h_set, D_set, C_set, gram_paths, train_index, y_train):
         # Initialize base learners
         for (a, b) in tqdm(list(combinations(self.labels, 2)), nested=True):
