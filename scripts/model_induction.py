@@ -14,6 +14,7 @@ import re
 import itertools
 import time
 from tqdm import tqdm
+import functools
 
 
 __number_of_experiments__ = 5
@@ -85,6 +86,18 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
         C_list.append(params['C'])
     return np.mean(scores), total_time, np.mean(training_times), np.mean(testing_times), np.mean(h_list), np.mean(D_list), np.mean(C_list)
 
+def read_gram_paths(gram_dir_path):
+    gram_paths = {}
+    with open(join(gram_dir_path, 'all.txt')) as f:
+        for l in f:
+            m = re.match(r"([0-9]+),([0-9]+),(.+)\n", l)
+            if m is not None:
+                h, D, path = int(m.group(1)), int(m.group(2)), m.group(3)
+                gram_paths[h, D] = path
+            else:
+                raise ValueError('Invalid all.txt file?')
+    return gram_dir_path
+
 
 def write_dump_statistics(file, gram_times):
     with open(file, 'w') as f:
@@ -116,6 +129,7 @@ def main():
     parser.add_argument('--D_set', type=int, nargs='+', required=False)
     parser.add_argument('-e', '--experiments', type=str, required=False)
     parser.add_argument('-o', '--out', type=str, required=False)
+    parser.add_argument('--combine_grams', type=str, nargs='+', required=False)
     args = parser.parse_args()
 
     # Precompute gram matrices
@@ -141,18 +155,9 @@ def main():
     elif all([args.experiments, args.gram_dir, args.h_set, args.D_set, args.out]):
         if not exists(args.gram_dir):
             raise ValueError('Given directory does not exist')
-        gram_paths = {}
-        with open(join(args.gram_dir, 'all.txt')) as f:
-            for l in f:
-                m = re.match(r"([0-9]+),([0-9]+),(.+)\n", l)
-                if m is not None:
-                    h, D, path = int(m.group(1)), int(m.group(2)), m.group(3)
-                    gram_paths[h, D] = path
-                else:
-                    raise ValueError('Invalid all.txt file?')
+        gram_paths = read_gram_paths(args.gram_dir)
         df, tools = read_data(args.experiments)
         y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
-
 
         score_list = []
         total_time_list = []
@@ -174,6 +179,30 @@ def main():
             D_mean_list.append(D)
             C_mean_list.append(C)
         write_experiments_statistics(args.out, score_list, total_time_list, training_time_list, testing_time_list, h_mean_list, D_mean_list, C_mean_list)
+
+    elif all([args.combine_grams, args.out, args.h_set, args.D_set]):
+
+        print('Combining gram matrices.')
+
+        gram_paths_list = []
+        for gram_dir_path in tqdm(args.combine_grams):
+            gram_paths = read_gram_paths(gram_dir_path)
+            gram_paths_list.append(gram_paths)
+        h_D_product = list(itertools.product(args.h_set, args.D_set))
+        ret = {}
+        for i, (h, D) in enumerate(h_D_product):
+            grams = []
+            for gram_paths in gram_paths_list:
+                grams.append(np.load(gram_paths[h, D]))
+            new_gram = functools.reduce(np.add, grams)
+            new_gram = np.divide(new_gram, len(grams))
+            output_path = join(args.out, 'K_h_{}_D_{}.gram'.format(h, D))
+            np.save(output_path, new_gram)
+            ret[h, D] = output_path + '.npy'
+        with open(join(args.out, 'all.txt'), 'w') as f:
+            for (h, D), v in ret.items():
+                f.write('{},{},{}\n'.format(h, D, v))
+
 
     # Wrong arguments, therefore print usage
     else:
