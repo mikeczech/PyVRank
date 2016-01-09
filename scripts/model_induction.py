@@ -16,6 +16,9 @@ import time
 from tqdm import tqdm
 
 
+__number_of_experiments__ = 5
+
+
 def dump_gram(graph_paths, types, h_set, D_set, out_dir):
     graphs = []
     for p in graph_paths:
@@ -63,14 +66,21 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
         y_train, y_test = y[train_index], y[test_index]
         clf = rpc.RPC(tools, spearman)
         start_training_time = time.time()
-        clf.gram_fit(h_set, D_set, [10], gram_paths, train_index, y_train)
+        clf.gram_fit(h_set, D_set, [0.001, 0.01, 0.1, 1, 10, 100, 1000], gram_paths, train_index, y_train)
         training_times.append(time.time() - start_training_time)
         start_testing_time = time.time()
         score = clf.score(gram_paths, test_index, train_index, y_test)
         testing_times.append(time.time() - start_testing_time)
         scores.append(score)
     total_time = time.time() - start_total_time
-    return scores, clf.params, total_time, training_times, testing_times
+    h_list = []
+    D_list = []
+    C_list = []
+    for (_, _), params in clf.params.items():
+        h_list.append(params['h'])
+        D_list.append(params['D'])
+        C_list.append(params['C'])
+    return np.mean(scores), total_time, np.mean(training_times), np.mean(testing_times), np.mean(h_list), np.mean(D_list), np.mean(C_list)
 
 
 def write_dump_statistics(file, gram_times):
@@ -82,21 +92,12 @@ def write_dump_statistics(file, gram_times):
         f.write('Total time: {} seconds\n'.format(total_time))
 
 
-def write_experiments_statistics(file, scores, total_time, final_params, training_times, testing_times):
+def write_experiments_statistics(file, score_list, total_times_list, training_times, testing_times, h_list, D_list, C_list):
     with open(file, 'w') as f:
-        f.write('Accuracy: {} (Std: {})\n'.format(np.mean(scores), np.std(scores)))
-        f.write('Total time: {} seconds\n'.format(total_time))
+        f.write('Accuracy: {} (Std: {})\n'.format(np.mean(score_list), np.std(score_list)))
+        f.write('Total time: {} seconds (Std: {})\n'.format(np.mean(total_times_list), np.std(total_times_list)))
         f.write('Average training time: {} seconds (Std: {})\n'.format(np.mean(training_times), np.std(training_times)))
         f.write('Average testing time: {} seconds (Std: {})\n'.format(np.mean(testing_times), np.std(testing_times)))
-        f.write('Total time: {} seconds\n'.format(total_time))
-        h_list = []
-        D_list = []
-        C_list = []
-        for (a, b), params in final_params.items():
-            f.write('{}, {}: h={}, D={}, C={}\n'.format(a, b, params['h'], params['D'], params['C']))
-            h_list.append(params['h'])
-            D_list.append(params['D'])
-            C_list.append(params['C'])
         f.write('Average h: {} (Std: {})\n'.format(np.mean(h_list), np.std(h_list)))
         f.write('Average D: {} (Std: {})\n'.format(np.mean(D_list), np.std(D_list)))
         f.write('Average C: {} (Std: {})\n'.format(np.mean(C_list), np.std(C_list)))
@@ -148,8 +149,28 @@ def main():
                     raise ValueError('Invalid all.txt file?')
         df, tools = read_data(args.experiments)
         y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
-        scores, final_params, total_time, training_times, testing_times = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
-        write_experiments_statistics(args.out, scores, total_time, final_params, training_times, testing_times)
+
+
+        score_list = []
+        total_time_list = []
+        training_time_list = []
+        testing_time_list = []
+        h_mean_list = []
+        D_mean_list = []
+        C_mean_list = []
+        for i in list(range(__number_of_experiments__)):
+
+            print('Starting experiment {} of {}'.format(i+1, __number_of_experiments__), flush=True)
+
+            score, total_time, training_time, testing_time, h, D, C = start_experiments(gram_paths, y, tools, args.h_set, args.D_set)
+            score_list.append(score)
+            total_time_list.append(total_time)
+            training_time_list.append(training_time)
+            testing_time_list.append(testing_time)
+            h_mean_list.append(h)
+            D_mean_list.append(D)
+            C_mean_list.append(C)
+        write_experiments_statistics(args.out, score_list, total_time_list, training_time_list, testing_time_list, h_mean_list, D_mean_list, C_mean_list)
 
     # Wrong arguments, therefore print usage
     else:
