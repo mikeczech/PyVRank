@@ -21,7 +21,10 @@ __number_of_experiments__ = 5
 
 def dump_gram(graph_paths, types, h_set, D_set, out_dir):
     graphs = []
-    for p in graph_paths:
+
+    print('Reading graph representations.')
+
+    for p in tqdm(graph_paths):
         if not isfile(p):
             raise ValueError('Graph {} not found.'.format(p))
         g = nx.read_gpickle(p)
