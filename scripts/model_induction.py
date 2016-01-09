@@ -204,6 +204,10 @@ def main():
                 f.write('{},{},{}\n'.format(h, D, v))
 
 
+    elif all([args.features, args.out]):
+        pass
+
+
     # Wrong arguments, therefore print usage
     else:
         parser.print_usage()
