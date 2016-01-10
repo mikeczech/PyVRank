@@ -9,7 +9,7 @@ import math
 from tqdm import tqdm
 
 
-rpc_logger = logging.getLogger('PyPRSVT.RPC')
+rpc_logger = logging.getLogger('PyPRSVT.RPC_FEATURES')
 rpc_logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler()
@@ -42,20 +42,19 @@ class RPC(object):
         self.distance_metric = distance_metric
 
     @staticmethod
-    def _k_fold_cv_gram(gram_matrix, y, C, folds=10, shuffle=True):
+    def _k_fold_cv(X, y, C, gamma, folds=10, shuffle=True):
         """
-        K-fold cross-validation using a precomputed gram matrix
+        K-fold cross-validation
         """
         scores = []
         loo = cross_validation.KFold(len(y), folds, shuffle=shuffle, random_state=random.randint(0, 100))
         for train_index, test_index in loo:
-            X_train, X_test = gram_matrix[train_index][:, train_index], gram_matrix[test_index][:, train_index]
-            y_train, y_test = y[train_index], y[test_index]
+            X_train, X_test, y_train, y_test = X[train_index], X[test_index], y[train_index], y[test_index]
             one_count = len([x for x in y_train if x == 1]);
             zero_count = len([x for x in y_train if x == 0]);
             balance = min(one_count, zero_count)/max(one_count, zero_count)
             if balance != 0:
-                clf = svm.SVC(C=C, probability=True, kernel='precomputed')
+                clf = svm.SVC(C=C, probability=True, kernel='rbf', gamma=gamma)
                 clf.fit(X_train, y_train)
             else:
                 print('Warning. Use of trivial classifier.')
@@ -64,8 +63,7 @@ class RPC(object):
             scores.append(score)
         return np.mean(scores), np.std(scores)
 
-
-    def gram_fit(self, h_set, D_set, C_set, gram_paths, train_index, y_train):
+    def fit(self, gamma_set, C_set, X_train, y_train):
         # Initialize base learners
         for (a, b) in tqdm(list(combinations(self.labels, 2)), nested=True):
 
@@ -85,58 +83,51 @@ class RPC(object):
 
             if balance != 0:
                 # Perform grid search to find optimal parameters for each binary classification problem
-                param_gid = {'h': h_set, 'D': D_set, 'C': C_set}
+                param_gid = {'gamma': gamma_set, 'C': C_set}
                 max_mean = -math.inf
                 for params in tqdm(list(ParameterGrid(param_gid)), nested=True):
-                    gram_matrix_train = np.load(gram_paths[params['h'], params['D']])[train_index][:, train_index]
-                    mean, _ = self._k_fold_cv_gram(gram_matrix_train, y_bin, params['C'])
+                    mean, _ = self._k_fold_cv(X_train, y_bin, params['C'], params['gamma'])
                     if mean > max_mean:
                         max_mean = mean
                         self.params[a, b] = params
 
                 # Use determined parameters to train base learner
-                gram_matrix_best = np.load(gram_paths[self.params[a, b]['h'], self.params[a, b]['D']])[train_index][:, train_index]
-                clf = svm.SVC(C=self.params[a, b]['C'], probability=True, kernel='precomputed')
-                clf.fit(gram_matrix_best, y_bin)
+                clf = svm.SVC(C=self.params[a, b]['C'], probability=True, kernel='rbf', gamma=self.params[a, b]['gamma'])
+                clf.fit(X_train, y_bin)
                 self.bin_clfs[a, b] = clf
             else:
                 print('Warning. Use of trivial classifier.')
                 self.bin_clfs[a, b] = TrivialClassifier([0, 1], 1)
-                self.params[a, b] = {'h': h_set[0], 'D': D_set[0], 'C': C_set[0]}
+                self.params[a, b] = {'C': C_set[0], 'gamma': gamma_set[0]}
 
         return self
 
-    def __R_inner(self, gram_paths, test_index, train_index, i, j):
-        K = np.load(gram_paths[self.params[i, j]['h'], self.params[i, j]['D']])
-        K_test = K[test_index][:, train_index]
-        return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(K_test)])
+    def __R_inner(self, X, i, j):
+        return np.array([x[1] for x in self.bin_clfs[i, j].predict_proba(X)])
 
-    def __R(self, gram_paths, test_index, train_index, i, j):
+    def __R(self, X, i, j):
         if (i, j) in self.bin_clfs.keys():
-            return self.__R_inner(gram_paths, test_index, train_index, i, j)
+            return self.__R_inner(X, i, j)
         else:
-            return 1 - self.__R_inner(gram_paths, test_index, train_index, j, i)
+            return 1 - self.__R_inner(X, j, i)
 
-    def predict(self, gram_paths, test_index, train_index, y_test):
+    def predict(self, X, y):
         # Compute scores
         scores = {}
         for l in self.labels:
-            scores[l] = sum([self.__R(gram_paths, test_index, train_index, l, ll) for ll in self.labels if ll != l])
+            scores[l] = sum([self.__R(X, l, ll) for ll in self.labels if ll != l])
 
         # Build rankings from scores
         ret = []
-        for i in range(len(y_test)):
+        for i in range(len(y)):
             r = sorted([l for l in self.labels], key=lambda l: scores[l][i])
             ret.append(Ranking(r))
         return ret
 
-    def score(self, gram_paths, test_index, train_index, y_test):
+    def score(self, X, y):
         correlations = []
-        for rs, rt in zip(self.predict(gram_paths, test_index, train_index, y_test), y_test):
+        for rs, rt in zip(self.predict(X, y), y):
             c = self.distance_metric.compute(rs, rt)
-            # print('RS: ' + str(rs))
-            # print('RT: ' + str(rt))
-            # print(c)
             correlations.append(c)
         return np.mean(correlations)
 

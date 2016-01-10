@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
-VERIFOLIO_URL = r'http://127.0.0.1:5000/extract'
+VERIFOLIO_URL = r'http://192.168.2.108:5000/extract'
 
 def extract_features(sourcefile):
     """
