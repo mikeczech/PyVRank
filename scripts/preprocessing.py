@@ -96,18 +96,24 @@ def main():
         df = pd.DataFrame.from_csv(args.hist)
         graph_paths = df['graph_representation'].tolist()
         graph_list = []
+        all_nodes = []
+        all_edges = []
         for p in graph_paths:
             if not os.path.isfile(p):
                 raise ValueError('Graph {} not found.'.format(p))
             g = nx.read_gpickle(p)
+            all_nodes.append(g.number_of_nodes())
+            all_edges.append(g.number_of_edges())
             graph_list.append(g)
-        graphinfo.generate_node_number_hist(graph_list)
-        graphinfo.generate_edge_number_hist(graph_list)
-        graphinfo.generate_edge_number_hist(graph_list, 1)
-        graphinfo.generate_edge_number_hist(graph_list, 2)
-        graphinfo.generate_edge_number_hist(graph_list, 3)
-        graphinfo.generate_edge_number_hist(graph_list, 4)
-        graphinfo.generate_node_depth_hist(graph_list)
+        print('MaxNodes {}'.format(max(all_nodes)))
+        print('AvgNodes {} ({})'.format(np.mean(all_nodes), np.std(all_nodes)))
+        print('MaxEdges {}'.format(max(all_edges)))
+        print('AvgEdges {} ({})'.format(np.mean(all_edges), np.std(all_edges)))
+        #graphinfo.generate_node_number_hist(graph_list, args.df_out)
+        graphinfo.generate_node_depth_hist(graph_list, args.df_out)
+        #graphinfo.generate_node_degree_hist(graph_list, args.df_out)
+        #graphinfo.generate_edge_number_hist(graph_list, args.df_out)
+        #graphinfo.draw_heatmap(args.df_out)
 
     elif all([args.verifolio, args.categories, args.max_size]):
         category_df_list = []

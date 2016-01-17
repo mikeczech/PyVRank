@@ -1,4 +1,5 @@
 from PyPRSVT.ranking import rpc, distance_metrics
+from PyPRSVT.ranking.features import rpc as feature_rpc
 from PyPRSVT.gk import GK_WL as gk
 from PyPRSVT.preprocessing.graphs import EdgeType
 from PyPRSVT.preprocessing.ranking import Ranking
@@ -86,6 +87,33 @@ def start_experiments(gram_paths, y, tools, h_set, D_set, folds=10):
         C_list.append(params['C'])
     return np.mean(scores), total_time, np.mean(training_times), np.mean(testing_times), np.mean(h_list), np.mean(D_list), np.mean(C_list)
 
+
+def start_verifolio_experiments(X, y, tools, folds=10):
+    start_total_time = time.time()
+    spearman = distance_metrics.SpearmansRankCorrelation(tools)
+    scores = []
+    training_times = []
+    testing_times = []
+    loo = cross_validation.KFold(len(y), folds, shuffle=True, random_state=random.randint(0, 100))
+    for train_index, test_index in tqdm(list(loo)):
+        X_train, X_test, y_train, y_test = X[train_index], X[test_index], y[train_index], y[test_index]
+        clf = feature_rpc.RPC(tools, spearman)
+        start_training_time = time.time()
+        clf.fit(np.logspace(-3, 2, 6), [0.001, 0.01, 0.1, 1, 10, 100, 1000], X_train, y_train)
+        training_times.append(time.time() - start_training_time)
+        start_testing_time = time.time()
+        score = clf.score(X_test, y_test)
+        testing_times.append(time.time() - start_testing_time)
+        scores.append(score)
+    total_time = time.time() - start_total_time
+    gamma_list = []
+    C_list = []
+    for (_, _), params in clf.params.items():
+        gamma_list.append(params['gamma'])
+        C_list.append(params['C'])
+    return np.mean(scores), total_time, np.mean(training_times), np.mean(testing_times), np.mean(gamma_list), np.mean(C_list)
+
+
 def read_gram_paths(gram_dir_path):
     gram_paths = {}
     with open(join(gram_dir_path, 'all.txt')) as f:
@@ -96,7 +124,7 @@ def read_gram_paths(gram_dir_path):
                 gram_paths[h, D] = path
             else:
                 raise ValueError('Invalid all.txt file?')
-    return gram_dir_path
+    return gram_paths
 
 
 def write_dump_statistics(file, gram_times):
@@ -119,10 +147,21 @@ def write_experiments_statistics(file, score_list, total_times_list, training_ti
         f.write('Average C: {} (Std: {})\n'.format(np.mean(C_list), np.std(C_list)))
 
 
+def write_verifolio_experiments_statistics(file, score_list, total_times_list, training_times, testing_times, gamma_list, C_list):
+    with open(file, 'w') as f:
+        f.write('Accuracy: {} (Std: {})\n'.format(np.mean(score_list), np.std(score_list)))
+        f.write('Total time: {} seconds (Std: {})\n'.format(np.mean(total_times_list), np.std(total_times_list)))
+        f.write('Average training time: {} seconds (Std: {})\n'.format(np.mean(training_times), np.std(training_times)))
+        f.write('Average testing time: {} seconds (Std: {})\n'.format(np.mean(testing_times), np.std(testing_times)))
+        f.write('Average gamma: {} (Std: {})\n'.format(np.mean(gamma_list), np.std(gamma_list)))
+        f.write('Average C: {} (Std: {})\n'.format(np.mean(C_list), np.std(C_list)))
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='Label Ranking')
     parser.add_argument('-g', '--dump_gram', type=str, required=False)
+    parser.add_argument('--features', type=str, required=False)
     parser.add_argument('--gram_dir', type=str, required=False)
     parser.add_argument('-t', '--types', type=int, nargs='+', required=False)
     parser.add_argument('--h_set', type=int, nargs='+', required=False)
@@ -203,9 +242,31 @@ def main():
             for (h, D), v in ret.items():
                 f.write('{},{},{}\n'.format(h, D, v))
 
-
+    # Perform experiment with verifolio feature vectors
     elif all([args.features, args.out]):
-        pass
+        df, tools = read_data(args.features)
+        y = np.array([Ranking(literal_eval(r)) for r in df['ranking'].tolist()])
+        feature_df = df.drop('ranking', 1).drop('property_type', 1)
+        X = feature_df.as_matrix()
+
+        score_list = []
+        total_time_list = []
+        training_time_list = []
+        testing_time_list = []
+        gamma_mean_list = []
+        C_mean_list = []
+        for i in list(range(__number_of_experiments__)):
+
+            print('Starting Verifolio experiment {} of {}'.format(i+1, __number_of_experiments__), flush=True)
+
+            score, total_time, training_time, testing_time, gamma, C = start_verifolio_experiments(X, y, tools)
+            score_list.append(score)
+            total_time_list.append(total_time)
+            training_time_list.append(training_time)
+            testing_time_list.append(testing_time)
+            gamma_mean_list.append(gamma)
+            C_mean_list.append(C)
+        write_verifolio_experiments_statistics(args.out, score_list, total_time_list, training_time_list, testing_time_list, gamma_mean_list, C_mean_list)
 
 
     # Wrong arguments, therefore print usage
