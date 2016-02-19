@@ -1,5 +1,7 @@
 """
-Weisfeiler Lehman graph kernel for CFGs
+Weisfeiler Lehman graph kernel for our graphs of verification tasks
+
+This is a modified version of the original python implementation of this kernel developed by Sandro Vega Pons.
 """
 import numpy as np
 import networkx as nx
