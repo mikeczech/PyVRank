@@ -1,7 +1,7 @@
 # PyPRSVT
 
 Software verification is an emerging discipline of engineering whose goal is to prove the absence of defects in programs.
-Research efforts over the past decades have led to sophisticated techniques for software verification, each of which making different trade-offs in terms of soundness and efficiency.
+Research efforts over the past decades have led to sophisticated techniques for software verification, each of which makes different trade-offs in terms of soundness and efficiency.
 Modern tool implementations for software verification combine a variety of those techniques.
 A major challenge for engineers is therefore to select the most adequate tool for a particular task at hand.
 
