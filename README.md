@@ -13,4 +13,4 @@ Moreover, the technique predicts tool rankings using kernel methods with a kerne
 
 The scripts-directory contains Python scripts which serve as a simple command line UI. This comprises a UI for preprocessing the raw data from the Competition on Software Verification 2015 (XML files) into csv files as well as a UI for induction of a prediction model. 
 
-TODO: Show examples commands
+TODO: Show example commands
