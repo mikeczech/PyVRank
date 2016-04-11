@@ -1,12 +1,11 @@
 # PyPRSVT
 
-<b>WORK IN PROGRESS</b>
+Software verification is an emerging discipline of engineering whose goal is to prove the absence of defects in programs.
+Research efforts over the past decades have led to sophisticated techniques for software verification, each of which making different trade-offs in terms of soundness and efficiency.
+Modern tool implementations for software verification combine a variety of those techniques.
+A major challenge for engineers is therefore to select the most adequate tool for a particular task at hand.
 
-A Python package for predicting rankings of software verification tools with 
-machine learning techniques including label ranking and kernels for structured data (e.g. graph kernels).
+This repository contains the implementation of a machine learning-based technique for predicting rankings of software verification tools in such a way that tools are ranked in accordance to their expected performance on a given verification task. Predicted rankings provide engineers with interesting prospects for tool selection by giving them the opportunity to trade off tool performance against other decision factors (e.g. fees for the use of tools in a service-oriented market).
+From a technical perspective, the technique combines control-flow, data dependency, control dependency, and syntactic information into one graph representation of verification tasks.
+Moreover, the technique predicts tool rankings using kernel methods with a kernel framework that is tailored to utilize domain-specific aspects of our graphs.
 
-Overall task: Having a verification task v (= program + specification) and a set of 
-verification tools T = {a, b, c}, predict a ranking among the tools in T such that it reflects 
-the the tool's suitability for v with respect to computational efficiency and soundness.
- 
-to be continued...!
