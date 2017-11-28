@@ -50,39 +50,6 @@ def witnesscheck_test():
     nt.assert_equal(category_results_nowc['cbmc'].iloc[0]['status'], svcomp15.Status.true)
     nt.assert_equal(category_results['cbmc'].iloc[0]['status'], svcomp15.Status.true)
 
-
-def create_benchmark_ranking_df_test():
-    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = ranking.create_ranking_df(category_results, svcomp15.compare_results)
-    df.to_csv('ranking_df.csv')
-    # Todo
-
-
-def create_benchmark_score_df_test():
-    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = classification.create_benchmark_score_dfdict(category_results, svcomp15.score)
-    df['cbmc'].to_csv('cmbc_score_df.csv')
-    df['cpachecker'].to_csv('cpachecker_score_df.csv')
-    df['smack'].to_csv('smack_score_df.csv')
-    # Todo
-
-
-def create_benchmark_cputime_df_test():
-    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = regression.create_benchmark_cputime_dfdict(category_results)
-    df['cbmc'].to_csv('cmbc_cputime_df.csv')
-    df['cpachecker'].to_csv('cpachecker_cputime_df.csv')
-    df['smack'].to_csv('smack_cputime_df.csv')
-    # Todo
-
-
-def create_benchmark_best_tool_df_test():
-    category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
-    df = classification.create_benchmark_best_tool_df(category_results, svcomp15.compare_results)
-    df.to_csv('best_tool_df.csv')
-    # Todo
-
-
 def derive_total_benchmark_order_test():
     category_results = svcomp15.read_category('static/results-xml-raw', 'mixed-examples')
     r = utils.derive_total_benchmark_order(
@@ -90,5 +57,3 @@ def derive_total_benchmark_order_test():
         'static/sv-benchmarks/c/mixed-examples/data_structures_set_multi_proc_false-unreach-call_ground.i',
         svcomp15.compare_results)
     nt.assert_equal(r, ['cpachecker', 'smack', 'cbmc'])
-
-
