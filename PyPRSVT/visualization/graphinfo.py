@@ -1,5 +1,7 @@
-import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.use('TkAgg')
+
+import matplotlib.pyplot as plt
 import networkx as nx
 from PyPRSVT.preprocessing.graphs import EdgeType
 import numpy as np
