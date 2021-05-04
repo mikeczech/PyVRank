@@ -11,6 +11,4 @@ Moreover, the technique predicts tool rankings using kernel methods with a kerne
 
 ## Brief Manual
 
-The scripts-directory contains Python scripts which serve as a simple command line UI. This comprises a UI for transforming the raw data from the Competition on Software Verification 2015 (XML files) into csv files as well as a UI for learning a prediction model. 
-
-TODO: Show example commands
+The scripts-directory additionally contains Python scripts which serve as a simple command line UI. This comprises a UI for transforming the raw data from the Competition on Software Verification 2015 (XML files) into csv files as well as a UI for learning a prediction model.
